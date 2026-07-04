@@ -84,10 +84,15 @@ const PART_SPECS = {
   },
 };
 
+// Deliberately describes the aesthetic generically (low-res retro
+// handheld display, simple digital pet toy) rather than naming any
+// specific game, console, or franchise -- per direct user instruction
+// (2026-07-05): the visual direction should evoke that whole era without
+// referencing anything specific/trademarked enough to invite a claim.
 const PIXEL_ART_RULES = `Draw everything as pixel art: build shapes out of a grid of small \
 axis-aligned <rect> elements (each rect roughly 4-8 units square, no rounded corners, no \
-gradients, no anti-aliased curves), like a Game Boy / early Pokémon / Tamagotchi era sprite. \
-Flat, limited color palette per part (2-4 colors).`;
+gradients, no anti-aliased curves), like a low-resolution retro handheld game display or a \
+simple digital pet toy. Flat, limited color palette per part (2-4 colors).`;
 
 function loadJson(path, fallback) {
   if (!existsSync(path)) return fallback;
@@ -295,8 +300,8 @@ async function generateInitialParts(digest) {
     .join("\n");
   const prompt = `Design an original monster/creature (not humanoid, not based on any \
 existing franchise or trademarked design) that represents a software repository, in the \
-style of an old-school Tamagotchi/Pokémon-era pixel-art pet with separate equipment slots. \
-It will be assembled from independent SVG part slots inside a fixed template -- you are \
+style of an old-school digital pet/creature-collecting game era, with separate equipment \
+slots. It will be assembled from independent SVG part slots inside a fixed template -- you are \
 drawing the CONTENT of each slot, not a full document.
 
 ${PIXEL_ART_RULES}

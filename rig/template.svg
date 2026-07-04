@@ -12,14 +12,13 @@
     any need to render faces/skin tones, sidestepping representation
     pitfalls entirely rather than trying to handle them well.
 
-    Two nested wrapper groups give the whole character a Tamagotchi-like
-    idle feel without any single element looking robotic:
-      - #character-sway: continuous, gentle side-to-side rock (always on).
-      - #character-hop: sits still for most of its cycle, then does one
-        quick hop, an "occasional" action, not a constant bounce.
-    Individual slots (eyes/hat/shoes) layer smaller flourishes on top of
-    that, each on its own unsynchronized timing so nothing lines up too
-    perfectly/mechanically.
+    Idle motion is a steady, rhythmic vertical bounce, reminiscent of a
+    turn-based role-playing game's monster battle sprite, described only
+    generically here and in every prompt: no specific game, console, or
+    franchise is named anywhere in this project, by direct user
+    instruction (2026-07-05). An earlier version also had a continuous
+    side-to-side rocking motion; removed per the same instruction, since
+    the target feel is a steady bounce, not a sway.
 
     NOTE: XML comments cannot contain two consecutive hyphens anywhere in
     their body: confirmed the hard way when rsvg-convert refused to parse
@@ -27,44 +26,28 @@
     a single hyphen with spaces instead of an em-dash style separator here.
   -->
   <style>
-    #character-sway {
-      animation: sway 4.5s ease-in-out infinite;
-      transform-origin: 100px 170px; /* near the feet: rocks like it's standing, not floating */
-    }
     #character-hop {
-      animation: hop 6s ease-in-out infinite;
+      animation: hop 0.9s ease-in-out infinite;
     }
     #eyes-slot {
       animation: blink 4.5s infinite;
       transform-origin: 100px 90px;
     }
-    #hat-slot {
-      animation: hat-wobble 3.7s ease-in-out infinite;
-      transform-origin: 100px 55px;
-    }
     #shoes-slot {
-      animation: step 1.3s steps(2) infinite;
+      animation: step 0.9s steps(2) infinite;
       transform-origin: 100px 165px;
     }
 
-    @keyframes sway {
-      0%, 100% { transform: rotate(-3deg); }
-      50%      { transform: rotate(3deg); }
-    }
-    /* Rests at translateY(0) for most of the cycle; the 80-95% window is
-       the one quick hop per loop. */
+    /* Continuous, snappy up-down bounce -- always on, not an occasional
+       action. This is the "battle sprite idle" feel the character rig
+       exists to produce. */
     @keyframes hop {
-      0%, 80%, 100% { transform: translateY(0); }
-      87%           { transform: translateY(-14px); }
-      93%           { transform: translateY(-14px); }
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-6px); }
     }
     @keyframes blink {
       0%, 88%, 100% { transform: scaleY(1); }
       92%           { transform: scaleY(0.1); }
-    }
-    @keyframes hat-wobble {
-      0%, 100% { transform: rotate(-4deg); }
-      50%      { transform: rotate(4deg); }
     }
     @keyframes step {
       0%   { transform: translateY(0); }
@@ -73,14 +56,12 @@
     }
   </style>
 
-  <g id="character-sway">
-    <g id="character-hop">
-      <g id="body-slot">{{BODY}}</g>
-      <g id="mouth-slot">{{MOUTH}}</g>
-      <g id="eyes-slot">{{EYES}}</g>
-      <g id="hat-slot">{{HAT}}</g>
-      <g id="armor-slot">{{ARMOR}}</g>
-      <g id="shoes-slot">{{SHOES}}</g>
-    </g>
+  <g id="character-hop">
+    <g id="body-slot">{{BODY}}</g>
+    <g id="mouth-slot">{{MOUTH}}</g>
+    <g id="eyes-slot">{{EYES}}</g>
+    <g id="hat-slot">{{HAT}}</g>
+    <g id="armor-slot">{{ARMOR}}</g>
+    <g id="shoes-slot">{{SHOES}}</g>
   </g>
 </svg>
