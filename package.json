@@ -1,0 +1,13 @@
+{
+  "name": "commit-familiar",
+  "private": true,
+  "type": "module",
+  "description": "A small pixel-art monster that lives in your README and grows from your actual commits.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test",
+    "test:coverage": "node --test --experimental-test-coverage"
+  }
+}
