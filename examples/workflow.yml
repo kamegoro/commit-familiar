@@ -1,0 +1,33 @@
+# Copy this into .github/workflows/commit-familiar.yml in your own repo.
+name: Commit Familiar
+
+on:
+  schedule:
+    - cron: "0 0 * * 1" # every Monday at 00:00 UTC
+  workflow_dispatch: {} # allows manually triggering a run to test it
+
+permissions:
+  contents: write
+
+jobs:
+  update-familiar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history is needed to diff against the last run
+
+      - uses: kamegoro/commit-familiar@v1
+        with:
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Optional, shown with their defaults:
+          # min-commits: "1"      # wait for at least this many commits before updating
+          # readme-path: "README.md"
+
+      - name: Commit updated character
+        run: |
+          git config user.name "commit-familiar[bot]"
+          git config user.email "actions@users.noreply.github.com"
+          git add familiar.svg .familiar-parts.json .familiar-traits.json .familiar-state.json README.md
+          git diff --cached --quiet || git commit -m "chore: update commit-familiar"
+          git push
