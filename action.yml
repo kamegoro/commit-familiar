@@ -1,0 +1,58 @@
+name: "Commit Familiar"
+description: >
+  Claude draws (and incrementally evolves) a small original SVG character
+  based on your repository's recent commit activity. Requires only an
+  ANTHROPIC_API_KEY secret -- no separate image-generation service, no
+  local setup for contributors.
+branding:
+  icon: "feather"
+  color: "purple"
+
+inputs:
+  anthropic-api-key:
+    description: "Anthropic API key. Pass as a repo secret, never commit it."
+    required: true
+  svg-path:
+    description: "Path (relative to repo root) where the character SVG is written."
+    required: false
+    default: "familiar.svg"
+  state-path:
+    description: "Path where the last-processed commit SHA is tracked."
+    required: false
+    default: ".familiar-state.json"
+  model:
+    description: "Anthropic model to use for the one-time initial design."
+    required: false
+    default: "claude-sonnet-5"
+  readme-path:
+    description: >
+      README to auto-embed the character into, between
+      <!-- COMMIT-FAMILIAR:START --> / <!-- COMMIT-FAMILIAR:END --> marker
+      comments. If the markers aren't found, embedding is skipped (add
+      them once, anywhere you want the character to sit) -- the file
+      itself is otherwise left untouched.
+    required: false
+    default: "README.md"
+  min-commits:
+    description: >
+      Minimum commits since the last update before doing anything.
+      Controls "is this activity worth an update", not run *frequency* --
+      frequency is entirely up to your own cron schedule. Commits below
+      this threshold are not discarded; they carry over and count toward
+      the next run.
+    required: false
+    default: "1"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Generate/update character SVG
+      shell: bash
+      env:
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+        FAMILIAR_SVG_PATH: ${{ inputs.svg-path }}
+        FAMILIAR_STATE_PATH: ${{ inputs.state-path }}
+        FAMILIAR_MODEL: ${{ inputs.model }}
+        FAMILIAR_README_PATH: ${{ inputs.readme-path }}
+        FAMILIAR_MIN_COMMITS: ${{ inputs.min-commits }}
+      run: node "${{ github.action_path }}/scripts/generate.mjs"
