@@ -131,13 +131,25 @@ function extractKeywordHits(messages) {
 
 function buildActivityDigest(sinceSha) {
   const range = sinceSha ? `${sinceSha}..HEAD` : "HEAD";
-  const commitCount = parseInt(execSync(`git rev-list --count ${range}`).toString().trim(), 10);
+  // --no-merges throughout: a merge commit's message ("Merge pull request
+  // #123 from ...") is pure noise for interpreting what a repo actually
+  // did, and its timestamp is often auto-generated rather than reflecting
+  // real work -- established practice in changelog tooling (e.g.
+  // git-cliff), confirmed via research 2026-07-05. Also keeps commitCount
+  // (and therefore whether min-commits is met) from being inflated by
+  // merges that carry no real signal.
+  const commitCount = parseInt(execSync(`git rev-list --no-merges --count ${range}`).toString().trim(), 10);
   if (commitCount === 0) return null;
 
-  const messages = execSync(`git log ${range} --pretty=format:%s`).toString().trim().split("\n").filter(Boolean);
+  const messages = execSync(`git log ${range} --no-merges --pretty=format:%s`).toString().trim().split("\n").filter(Boolean);
   const keywordHits = extractKeywordHits(messages);
 
-  const base = sinceSha ? sinceSha : `HEAD~${commitCount}`;
+  // On the very first run there's no checkpoint yet, so diff against the
+  // repository's root commit (the true start of history) rather than an
+  // ordinal HEAD~N guess -- HEAD~N would silently misalign once merge
+  // commits exist, since commitCount above excludes them but HEAD~N
+  // walks every commit regardless.
+  const base = sinceSha ? sinceSha : execSync("git rev-list --max-parents=0 HEAD").toString().trim().split("\n")[0];
   const filesChangedMatch = execSync(`git diff --stat ${base}..HEAD`).toString().trim().match(/(\d+) files? changed/);
   const filesChanged = filesChangedMatch ? parseInt(filesChangedMatch[1], 10) : 0;
 
@@ -155,7 +167,7 @@ function buildActivityDigest(sinceSha) {
 
   // Commit hour distribution, used for the "night owl" trait -- cheap
   // local signal that needs no external data source.
-  const hours = execSync(`git log ${range} --pretty=format:%ad --date=format:%H`)
+  const hours = execSync(`git log ${range} --no-merges --pretty=format:%ad --date=format:%H`)
     .toString()
     .trim()
     .split("\n")
@@ -166,7 +178,11 @@ function buildActivityDigest(sinceSha) {
   // Distinct calendar days touched, vs. commit count -- a proxy for
   // "spread evenly across days" (shoes/consistency) vs. "one big burst".
   const distinctDays = new Set(
-    execSync(`git log ${range} --pretty=format:%ad --date=format:%Y-%m-%d`).toString().trim().split("\n").filter(Boolean)
+    execSync(`git log ${range} --no-merges --pretty=format:%ad --date=format:%Y-%m-%d`)
+      .toString()
+      .trim()
+      .split("\n")
+      .filter(Boolean)
   ).size;
 
   return {
