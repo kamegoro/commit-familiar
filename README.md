@@ -13,6 +13,11 @@ character, because no two repositories have the same history.
 
 [How it works](#-how-it-works) • [Setup](#-setup) • [Customization](#-customization) • [vs similar projects](#-vs-similar-projects)
 
+<!-- COMMIT-FAMILIAR:START -->
+<!-- COMMIT-FAMILIAR:END -->
+
+*This project's own README uses commit-familiar on itself — the monster above is grown from this repository's real commit history.*
+
 </div>
 
 ---
