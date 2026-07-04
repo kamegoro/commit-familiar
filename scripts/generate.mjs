@@ -180,6 +180,16 @@ function buildActivityDigest(sinceSha) {
   };
 }
 
+// Every other line in this digest is bounded (a count, a percentage, a
+// top-5 list) regardless of how much activity happened -- the commit
+// message list was the one exception, growing without limit if a repo
+// goes a long stretch between runs (e.g. min-commits set high, or the
+// workflow simply didn't fire for a while) before finally clearing the
+// threshold. Capped for cost predictability, not because more messages
+// would break anything: a single run's prompt cost should stay roughly
+// constant no matter how bursty the underlying activity was.
+const MAX_MESSAGES_IN_DIGEST = 15;
+
 function digestToFacts(digest) {
   const topExts = digest.extensions.slice(0, 5).map((e) => `${e.ext} (${e.count})`).join(", ") || "none";
   const topKeywords =
@@ -188,13 +198,17 @@ function digestToFacts(digest) {
       .slice(0, 5)
       .map(([kw, n]) => `${kw} (mentioned ${n}x)`)
       .join(", ") || "none detected";
+  const shownMessages = digest.messages.slice(0, MAX_MESSAGES_IN_DIGEST);
+  const omittedCount = digest.messages.length - shownMessages.length;
+  const messageBlock =
+    shownMessages.map((m) => `- ${m}`).join("\n") + (omittedCount > 0 ? `\n- ...and ${omittedCount} more` : "");
   return [
     `${digest.commitCount} commits since last update.`,
     `${digest.filesChanged} files changed.`,
     `Top file types touched: ${topExts}.`,
     `Technologies mentioned in commit messages: ${topKeywords}.`,
     `${Math.round(digest.nightRatio * 100)}% of these commits happened late night (22:00-05:00).`,
-    `Commit messages:\n${digest.messages.map((m) => `- ${m}`).join("\n")}`,
+    `Commit messages:\n${messageBlock}`,
   ].join("\n");
 }
 
