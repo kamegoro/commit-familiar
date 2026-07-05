@@ -1,6 +1,24 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { topEntry, updateTraits, pickPartToUpdate, ARMOR_MILESTONE_STEP } from "../../scripts/lib/traits.mjs";
+import { topEntry, updateTraits, pickPartToUpdate, deriveIdentitySeed, ARMOR_MILESTONE_STEP } from "../../scripts/lib/traits.mjs";
+
+describe("deriveIdentitySeed", () => {
+  test("is deterministic: the same input always produces the same seed", () => {
+    assert.equal(deriveIdentitySeed("abc123"), deriveIdentitySeed("abc123"));
+  });
+
+  test("different inputs produce different seeds", () => {
+    assert.notEqual(deriveIdentitySeed("abc123"), deriveIdentitySeed("def456"));
+  });
+
+  test("always returns a non-negative integer", () => {
+    for (const input of ["", "a", "a very long commit sha like string 0123456789abcdef"]) {
+      const seed = deriveIdentitySeed(input);
+      assert.ok(Number.isInteger(seed));
+      assert.ok(seed >= 0);
+    }
+  });
+});
 
 describe("topEntry", () => {
   test("returns null for an empty counts object", () => {

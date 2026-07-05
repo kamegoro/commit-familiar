@@ -5,8 +5,39 @@ import {
   reasonForPart,
   buildInitialPrompt,
   buildUpdatePrompt,
+  styleFromSeed,
   PART_SPECS,
+  SILHOUETTE_ARCHETYPES,
+  DISTINCTIVE_FEATURES,
 } from "../../scripts/lib/parts.mjs";
+
+describe("styleFromSeed", () => {
+  test("hue is always within 0-359", () => {
+    for (const seed of [0, 1, 359, 360, 999999, 4294967295]) {
+      const { hue } = styleFromSeed(seed);
+      assert.ok(hue >= 0 && hue < 360, `hue ${hue} out of range for seed ${seed}`);
+    }
+  });
+
+  test("archetype and feature are always one of the known descriptions", () => {
+    for (const seed of [0, 1, 12345, 4294967295]) {
+      const { archetype, feature } = styleFromSeed(seed);
+      assert.ok(SILHOUETTE_ARCHETYPES.includes(archetype));
+      assert.ok(DISTINCTIVE_FEATURES.includes(feature));
+    }
+  });
+
+  test("is deterministic for the same seed", () => {
+    assert.deepEqual(styleFromSeed(42), styleFromSeed(42));
+  });
+
+  test("different seeds produce different combinations across a sample", () => {
+    const results = new Set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((s) => JSON.stringify(styleFromSeed(s * 137))));
+    // Not asserting all 10 are unique (the space could coincidentally repeat),
+    // but a real fix should produce meaningfully more than one distinct result.
+    assert.ok(results.size > 1, "expected more than one distinct style across varied seeds");
+  });
+});
 
 describe("extractJsonObject", () => {
   test("parses a plain JSON object with no fences", () => {
@@ -50,7 +81,7 @@ describe("reasonForPart", () => {
 });
 
 describe("buildInitialPrompt", () => {
-  const digest = { commitCount: 3, filesChanged: 2, extensions: [], keywordHits: {}, messages: ["feat: x"], nightRatio: 0 };
+  const digest = { commitCount: 3, filesChanged: 2, extensions: [], keywordHits: {}, messages: ["feat: x"], nightRatio: 0, rootSha: "abc123" };
 
   test("includes every part slot key", () => {
     const prompt = buildInitialPrompt(digest);
@@ -72,6 +103,25 @@ describe("buildInitialPrompt", () => {
   test("embeds the digest's activity facts", () => {
     const prompt = buildInitialPrompt(digest);
     assert.match(prompt, /3 commits since last update/);
+  });
+
+  test("embeds a concrete hue degree, silhouette archetype, and distinctive feature", () => {
+    const prompt = buildInitialPrompt(digest);
+    assert.match(prompt, /hue \d+° on the color wheel/);
+    assert.match(prompt, new RegExp(SILHOUETTE_ARCHETYPES.map((a) => a.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")));
+    assert.match(prompt, new RegExp(DISTINCTIVE_FEATURES.map((f) => f.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")));
+  });
+
+  test("two repositories with different root commits get visibly different style instructions", () => {
+    const promptA = buildInitialPrompt({ ...digest, rootSha: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" });
+    const promptB = buildInitialPrompt({ ...digest, rootSha: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" });
+    assert.notEqual(promptA, promptB);
+  });
+
+  test("is deterministic: the same repository always gets the same style instruction", () => {
+    const promptA = buildInitialPrompt(digest);
+    const promptB = buildInitialPrompt(digest);
+    assert.equal(promptA, promptB);
   });
 });
 

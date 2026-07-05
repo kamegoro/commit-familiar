@@ -54,7 +54,7 @@ describe("callClaude", () => {
 });
 
 describe("generateInitialParts", () => {
-  const digest = { commitCount: 1, filesChanged: 1, extensions: [], keywordHits: {}, messages: ["feat: x"], nightRatio: 0 };
+  const digest = { commitCount: 1, filesChanged: 1, extensions: [], keywordHits: {}, messages: ["feat: x"], nightRatio: 0, rootSha: "abc123" };
 
   test("parses the model's JSON response into a parts object", async () => {
     const parts = { "body-slot": "<rect/>", "eyes-slot": "", "mouth-slot": "", "hat-slot": "", "armor-slot": "", "shoes-slot": "" };

@@ -104,6 +104,18 @@ describe("buildActivityDigest", () => {
     assert.equal(digest.commitCount, 2);
   });
 
+  test("rootSha always points at the repository's actual first commit, regardless of sinceSha", () => {
+    commit(dir, "a.txt", "1", "chore: initial");
+    const firstSha = execSync("git rev-parse HEAD", { cwd: dir }).toString().trim();
+    commit(dir, "b.txt", "2", "feat: second file");
+    commit(dir, "c.txt", "3", "feat: third file");
+
+    const fromRoot = buildActivityDigest(null, dir);
+    const fromCheckpoint = buildActivityDigest(firstSha, dir);
+    assert.equal(fromRoot.rootSha, firstSha);
+    assert.equal(fromCheckpoint.rootSha, firstSha);
+  });
+
   test("excludes merge commits from the count and message list", () => {
     commit(dir, "a.txt", "1", "chore: initial");
     const firstSha = execSync("git rev-parse HEAD", { cwd: dir }).toString().trim();
