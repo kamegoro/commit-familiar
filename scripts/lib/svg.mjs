@@ -26,6 +26,16 @@ export function renderSvg(parts, templatePath = DEFAULT_TEMPLATE_PATH) {
   return svg;
 }
 
+// Default display width in the README, in CSS pixels. Markdown image
+// syntax (![alt](path)) can't set an explicit size, and without one, an
+// SVG with no width/height attribute of its own (see rig/template.svg)
+// falls back to browser-dependent replaced-element sizing that rendered
+// much larger than intended in practice (user feedback, 2026-07-06:
+// "デカすぎる" -- too big). An HTML <img width="..."> tag makes the
+// display size explicit and configurable instead of leaving it to
+// whatever a renderer's default happens to be.
+export const DEFAULT_DISPLAY_WIDTH = 100;
+
 // Auto-embeds the character into a README between two marker comments, so
 // setup is "paste two marker lines once" rather than "remember to add an
 // <img> tag and keep it pointed at the right path". No-ops (with a hint)
@@ -34,7 +44,7 @@ export function renderSvg(parts, templatePath = DEFAULT_TEMPLATE_PATH) {
 // as a small aside next to other README content, not to take over the
 // file's layout. Returns a status string instead of logging directly, so
 // tests can assert on the outcome without capturing stdout.
-export function injectIntoReadme(readmePath, svgPath) {
+export function injectIntoReadme(readmePath, svgPath, displayWidth = DEFAULT_DISPLAY_WIDTH) {
   if (!existsSync(readmePath)) return "readme-missing";
   const readme = readFileSync(readmePath, "utf8");
   const startIdx = readme.indexOf(README_MARKER_START);
@@ -42,7 +52,7 @@ export function injectIntoReadme(readmePath, svgPath) {
   if (startIdx === -1 || endIdx === -1 || endIdx < startIdx) return "markers-not-found";
   const before = readme.slice(0, startIdx + README_MARKER_START.length);
   const after = readme.slice(endIdx);
-  const block = `\n![familiar](./${svgPath})\n`;
+  const block = `\n<img src="./${svgPath}" width="${displayWidth}" alt="familiar" />\n`;
   writeFileSync(readmePath, `${before}${block}${after}`);
   return "updated";
 }

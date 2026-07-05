@@ -16,7 +16,7 @@ import { writeFileSync } from "node:fs";
 import { buildActivityDigest } from "./lib/digest.mjs";
 import { updateTraits, pickPartToUpdate } from "./lib/traits.mjs";
 import { generateInitialParts, updatePart } from "./lib/claude.mjs";
-import { renderSvg, injectIntoReadme } from "./lib/svg.mjs";
+import { renderSvg, injectIntoReadme, DEFAULT_DISPLAY_WIDTH } from "./lib/svg.mjs";
 import { loadJson, saveJson } from "./lib/json-store.mjs";
 
 export function loadConfig(env = process.env) {
@@ -27,6 +27,11 @@ export function loadConfig(env = process.env) {
     traitsPath: env.FAMILIAR_TRAITS_PATH || ".familiar-traits.json",
     statePath: env.FAMILIAR_STATE_PATH || ".familiar-state.json",
     readmePath: env.FAMILIAR_README_PATH || "README.md",
+    // How large the character displays in the README -- distinct from
+    // the SVG's own internal pixel grid/viewBox, which stays a fixed
+    // 200x200 regardless. Configurable since "too big" is a matter of
+    // taste per repo (user feedback, 2026-07-06).
+    displayWidth: parseInt(env.FAMILIAR_DISPLAY_WIDTH || String(DEFAULT_DISPLAY_WIDTH), 10),
     // "Should this run actually do anything" threshold -- distinct from
     // run *frequency*, which is left entirely to whatever cron schedule
     // the caller sets up. Guards against updating on trivially small
@@ -82,7 +87,7 @@ export async function run(config) {
   writeFileSync(config.svgPath, svg);
   saveJson(config.partsPath, parts);
   saveJson(config.traitsPath, traits);
-  const readmeResult = injectIntoReadme(config.readmePath, config.svgPath);
+  const readmeResult = injectIntoReadme(config.readmePath, config.svgPath, config.displayWidth);
 
   const headSha = execSync("git rev-parse HEAD").toString().trim();
   saveJson(config.statePath, { lastSha: headSha, runIndex: state.runIndex + 1, updatedAt: new Date().toISOString() });

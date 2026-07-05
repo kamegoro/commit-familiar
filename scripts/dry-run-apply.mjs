@@ -11,7 +11,7 @@
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { extractJsonObject } from "./lib/parts.mjs";
-import { renderSvg, injectIntoReadme } from "./lib/svg.mjs";
+import { renderSvg, injectIntoReadme, DEFAULT_DISPLAY_WIDTH } from "./lib/svg.mjs";
 import { loadJson, saveJson } from "./lib/json-store.mjs";
 import { DRYRUN_META_PATH } from "./dry-run-prompt.mjs";
 
@@ -23,6 +23,7 @@ export function loadConfig(env = process.env) {
     statePath: env.FAMILIAR_STATE_PATH || ".familiar-state.json",
     readmePath: env.FAMILIAR_README_PATH || "README.md",
     metaPath: env.FAMILIAR_DRYRUN_META_PATH || DRYRUN_META_PATH,
+    displayWidth: parseInt(env.FAMILIAR_DISPLAY_WIDTH || String(DEFAULT_DISPLAY_WIDTH), 10),
   };
 }
 
@@ -43,7 +44,7 @@ export function applyDryRunResponse(responseText, meta, config) {
   writeFileSync(config.svgPath, svg);
   saveJson(config.partsPath, parts);
   saveJson(config.traitsPath, meta.traits);
-  const readmeResult = injectIntoReadme(config.readmePath, config.svgPath);
+  const readmeResult = injectIntoReadme(config.readmePath, config.svgPath, config.displayWidth);
   saveJson(config.statePath, { lastSha: meta.headSha, runIndex: meta.runIndex + 1, updatedAt: new Date().toISOString() });
 
   return { parts, readmeResult };

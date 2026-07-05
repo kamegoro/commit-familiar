@@ -42,6 +42,13 @@ inputs:
       the next run.
     required: false
     default: "1"
+  display-width:
+    description: >
+      Display width in the README, in CSS pixels (via an <img width="...">
+      tag). The SVG's own internal pixel grid is always 200x200 regardless
+      of this setting -- this only controls how large it appears.
+    required: false
+    default: "100"
 
 runs:
   using: "composite"
@@ -55,4 +62,5 @@ runs:
         FAMILIAR_MODEL: ${{ inputs.model }}
         FAMILIAR_README_PATH: ${{ inputs.readme-path }}
         FAMILIAR_MIN_COMMITS: ${{ inputs.min-commits }}
+        FAMILIAR_DISPLAY_WIDTH: ${{ inputs.display-width }}
       run: node "${{ github.action_path }}/scripts/generate.mjs"
