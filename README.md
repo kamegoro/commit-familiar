@@ -112,6 +112,24 @@ You pay for your own Claude API usage, the same model as `claude-code-action`. I
 design uses a stronger model once; every regular update uses a smaller model on a
 narrow, single-part task — a run against a small commit digest costs a fraction of a cent.
 
+## 🧪 Verifying the pipeline without an API key
+
+`scripts/dry-run-prompt.mjs` and `scripts/dry-run-apply.mjs` let you sanity-check the
+entire pipeline — activity digest, part selection, JSON parsing, SVG rendering, README
+embedding — without `ANTHROPIC_API_KEY` or any real API cost. The only piece they don't
+exercise is the actual network call: a Claude Code session reads the exact prompt a real
+run would send and writes the response itself, then everything else runs through the
+same production code and the same production file paths a real run uses.
+
+```bash
+node scripts/dry-run-prompt.mjs                       # prints the real prompt
+# (write a response following the prompt's rules to a file)
+node scripts/dry-run-apply.mjs path/to/response.json  # applies it for real
+```
+
+See [`.claude/skills/verify-familiar`](./.claude/skills/verify-familiar) for the full,
+Claude-Code-invocable version of this workflow.
+
 ## License
 
 MIT
