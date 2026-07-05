@@ -40,7 +40,8 @@ monsters, not the same finite cast everyone else has.
 The character is deliberately **not** one image Claude freely repaints every run:
 
 - **A fixed rig** (`rig/template.svg`) — the group structure and the CSS animations that
-  make the monster blink, hop, and sway. Hand-authored once, never touched by AI.
+  give the monster a handful of small, occasional idle movements (a brief bounce, a blink,
+  a little tap) rather than constant motion. Hand-authored once, never touched by AI.
 - **Independent parts** (`.familiar-parts.json`) — body, eyes, mouth, and three equipment
   slots (hat, armor, shoes), each stored separately.
 - **One part updated per run.** A deterministic rule in code — not an LLM judgment call —
@@ -95,6 +96,7 @@ action doesn't control that. What it does let you configure (as `with:` inputs, 
 | `readme-path` | `README.md` | Where to look for the embed markers. |
 | `svg-path` | `familiar.svg` | Where the rendered character is written. |
 | `model` | `claude-sonnet-5` | Model used for the one-time initial design. |
+| `display-width` | `100` | Display width in the README, in CSS pixels. The SVG's own internal pixel grid is always 200x200 regardless. |
 
 ## 🆚 vs similar projects
 
