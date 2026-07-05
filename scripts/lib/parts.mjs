@@ -9,6 +9,14 @@ import { digestToFacts } from "./digest.mjs";
 // but slightly bigger") so that picking one by arithmetic actually forces
 // a different silhouette, not a cosmetic variation on the same shape.
 // Generic descriptions only -- no specific creature/franchise named.
+//
+// Expanded 2026-07-05: hue alone gives fine-grained numeric variety
+// (360 values), but two nearby hues barely read as different to a human,
+// and with only 10 archetypes x 8 features, the number of *structurally*
+// distinguishable results was really just 80, not the "thousands, ideally
+// never repeats" bar the user set. Multiplying more independent axes
+// together, not widening any single one, is what actually gets there --
+// see styleFromSeed for the combinatorics.
 export const SILHOUETTE_ARCHETYPES = [
   "round and squat, wider than tall",
   "tall and narrow, taller than wide",
@@ -20,6 +28,12 @@ export const SILHOUETTE_ARCHETYPES = [
   "wedge-shaped, wide at the top tapering to a point at the bottom",
   "star-like, with several points radiating from a central mass",
   "blocky and angular, built from distinct rectangular chunks rather than a smooth curve",
+  "an hourglass shape, narrow in the middle and wide at both the top and bottom",
+  "a flat wide disc, much wider than it is tall",
+  "a compact core with small stubby limb-like bumps poking out on both sides",
+  "a single tall spire narrowing continuously from a wide base to a thin tip",
+  "two round lobes of clearly different sizes joined together",
+  "a zigzagging outline that steps in and out irregularly rather than a smooth silhouette",
 ];
 
 export const DISTINCTIVE_FEATURES = [
@@ -31,22 +45,58 @@ export const DISTINCTIVE_FEATURES = [
   "a row of small spikes along the top edge",
   "one asymmetric bump or growth larger than the rest",
   "a small pattern of spots or a stripe across the body",
+  "a cluster of small dots or freckles across the upper body",
+  "a jagged crack-like line pattern across one side",
+  "a soft glow or halo ring around the head area",
+  "a small secondary limb or nub reaching out from one side",
+];
+
+export const PALETTE_MOODS = [
+  "vivid and highly saturated",
+  "soft and pastel, muted and gentle",
+  "dark and moody, deep shadowy tones",
+  "warm and earthy, like clay or autumn leaves",
+  "cool and icy, pale blues and whites mixed in",
+];
+
+export const SURFACE_PATTERNS = [
+  "smooth solid color bands with no additional texture",
+  "a scattered pattern of small contrasting-color dots across the body",
+  "diagonal stripe accents crossing part of the body",
+  "a patchy, mottled two-tone texture like uneven coloring",
 ];
 
 // Derives several independent-feeling choices from one seed via a
-// mixed-radix split (like extracting separate digits from one number),
-// so hue/archetype/feature don't all just repeat the same modulo pattern
-// against each other. The seed itself comes from the repo's permanent
-// root commit SHA (see digest.mjs), so this is deterministic per
-// repository -- same repo always designs toward the same identity -- but
-// varies widely *across* different repositories, which is the actual
-// goal: not randomness for its own sake, but enough independent axes
-// that different repos don't converge on the same "safe" result.
+// mixed-radix split (like extracting successive digits from one number),
+// so the axes don't all just repeat the same modulo pattern against each
+// other. The seed comes from the repo's permanent root commit SHA (see
+// digest.mjs), so this is deterministic per repository -- same repo
+// always designs toward the same identity -- but varies widely *across*
+// different repositories: 360 hues x 16 archetypes x 12 features x 5
+// palette moods x 4 surface patterns = 13,824,000 combinations, comfortably
+// past "thousands of distinguishable results" and into "collisions
+// between two different repos are practically negligible" territory. This
+// is combinatorics, not true randomness -- a 32-bit hash has ~4.29
+// billion possible values, far more than 13.8M combinations, so there's
+// no risk of running out of entropy to split.
 export function styleFromSeed(seed) {
   const hue = seed % 360;
-  const archetypeIndex = Math.floor(seed / 360) % SILHOUETTE_ARCHETYPES.length;
-  const featureIndex = Math.floor(seed / (360 * SILHOUETTE_ARCHETYPES.length)) % DISTINCTIVE_FEATURES.length;
-  return { hue, archetype: SILHOUETTE_ARCHETYPES[archetypeIndex], feature: DISTINCTIVE_FEATURES[featureIndex] };
+  let remainder = Math.floor(seed / 360);
+  const archetypeIndex = remainder % SILHOUETTE_ARCHETYPES.length;
+  remainder = Math.floor(remainder / SILHOUETTE_ARCHETYPES.length);
+  const featureIndex = remainder % DISTINCTIVE_FEATURES.length;
+  remainder = Math.floor(remainder / DISTINCTIVE_FEATURES.length);
+  const paletteMoodIndex = remainder % PALETTE_MOODS.length;
+  remainder = Math.floor(remainder / PALETTE_MOODS.length);
+  const surfacePatternIndex = remainder % SURFACE_PATTERNS.length;
+
+  return {
+    hue,
+    archetype: SILHOUETTE_ARCHETYPES[archetypeIndex],
+    feature: DISTINCTIVE_FEATURES[featureIndex],
+    paletteMood: PALETTE_MOODS[paletteMoodIndex],
+    surfacePattern: SURFACE_PATTERNS[surfacePatternIndex],
+  };
 }
 
 // Each slot's purpose + a bounding-box hint, given to Claude so free-form
@@ -140,7 +190,7 @@ export function buildInitialPrompt(digest) {
   // things" ask -- see styleFromSeed's comment for why. The seed comes
   // from the repo's permanent root commit, so this is the same for every
   // initial-design attempt on this repo but differs widely across repos.
-  const { hue, archetype, feature } = styleFromSeed(deriveIdentitySeed(digest.rootSha));
+  const { hue, archetype, feature, paletteMood, surfacePattern } = styleFromSeed(deriveIdentitySeed(digest.rootSha));
   return `Design an original monster/creature (not humanoid, not based on any \
 existing franchise or trademarked design) that represents a software repository, in the \
 style of an old-school digital pet/creature-collecting game era, with separate equipment \
@@ -150,9 +200,12 @@ drawing the CONTENT of each slot, not a full document.
 ${PIXEL_ART_RULES}
 
 This specific creature's identity (derived from this repository, so it won't match other \
-repositories' creatures -- follow these concretely rather than choosing your own): base the \
-color palette around hue ${hue}° on the color wheel; the body's overall silhouette should be \
-${archetype}; give it ${feature} as its one distinctive feature.
+repositories' creatures -- follow these concretely rather than choosing your own):
+- Base the color palette around hue ${hue}° on the color wheel.
+- The overall color mood should be ${paletteMood}.
+- The body's overall silhouette should be ${archetype}.
+- Give it ${feature} as its one distinctive feature.
+- Render the body surface with ${surfacePattern}.
 
 Slots to design:
 ${specLines}
