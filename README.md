@@ -14,7 +14,7 @@ character, because no two repositories have the same history.
 [How it works](#-how-it-works) • [Setup](#-setup) • [Customization](#-customization) • [vs similar projects](#-vs-similar-projects)
 
 <!-- COMMIT-FAMILIAR:START -->
-![familiar](./familiar.svg)
+<img src="./familiar.svg" width="100" alt="familiar" />
 <!-- COMMIT-FAMILIAR:END -->
 
 *This project's own README uses commit-familiar on itself — the monster above is grown from this repository's real commit history.*
@@ -79,8 +79,8 @@ face/skin-tone representation entirely rather than trying to get it right.
    <!-- COMMIT-FAMILIAR:START -->
    <!-- COMMIT-FAMILIAR:END -->
    ```
-   The action fills in the `![familiar](...)` image between them and keeps it updated —
-   everything outside the markers is left alone.
+   The action fills in an `<img>` tag between them and keeps it updated — everything outside
+   the markers is left alone.
 4. Run the workflow once manually (Actions tab → Commit Familiar → Run workflow) to
    generate the first version, then let the schedule in your own workflow file take over.
 
