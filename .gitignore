@@ -3,3 +3,11 @@ node_modules/
 /CLAUDE.md
 .agent/
 .familiar-dryrun-meta.json
+# Growth state lives in the GitHub Actions cache (see
+# examples/workflow.yml), not the repo itself -- the only file
+# commit-familiar adds to a real repository is familiar.svg. Still
+# written locally by scripts/dry-run-*.mjs for manual testing, just
+# never committed.
+.familiar-parts.json
+.familiar-traits.json
+.familiar-state.json

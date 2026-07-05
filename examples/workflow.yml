@@ -17,17 +17,46 @@ jobs:
         with:
           fetch-depth: 0 # full history is needed to diff against the last run
 
+      # commit-familiar's growth state (.familiar-parts.json,
+      # .familiar-traits.json, .familiar-state.json) lives in the GitHub
+      # Actions cache instead of being committed to your repo -- the only
+      # file this action adds to your actual repository is familiar.svg
+      # itself. restore-keys falls back to the most recent previous save
+      # (the exact run-id key below never already exists), and the save
+      # step below always writes a fresh key so this always picks up the
+      # latest state.
+      - name: Restore commit-familiar state
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            .familiar-parts.json
+            .familiar-traits.json
+            .familiar-state.json
+          key: commit-familiar-state-${{ github.run_id }}
+          restore-keys: |
+            commit-familiar-state-
+
       - uses: kamegoro/commit-familiar@v1
         with:
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           # Optional, shown with their defaults:
           # min-commits: "1"      # wait for at least this many commits before updating
           # readme-path: "README.md"
+          # display-width: "100"
+
+      - name: Save commit-familiar state
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            .familiar-parts.json
+            .familiar-traits.json
+            .familiar-state.json
+          key: commit-familiar-state-${{ github.run_id }}
 
       - name: Commit updated character
         run: |
           git config user.name "commit-familiar[bot]"
           git config user.email "actions@users.noreply.github.com"
-          git add familiar.svg .familiar-parts.json .familiar-traits.json .familiar-state.json README.md
+          git add familiar.svg README.md
           git diff --cached --quiet || git commit -m "chore: update commit-familiar"
           git push
