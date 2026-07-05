@@ -108,30 +108,67 @@ export const SURFACE_PATTERNS = [
   "a patchy, mottled two-tone texture like uneven coloring",
 ];
 
-// Total combinatorial space: 360 hues x 11,340 silhouettes (see
-// composeSilhouette) x 12 features x 5 palette moods x 4 surface patterns
-// = 979,776,000. Comfortably past "10,000+ distinguishable results" (the
-// user's bar, 2026-07-05) for the silhouette axis alone, and orders of
-// magnitude more once combined with the other axes. This is
+// Researched (2026-07-05, at user request) how established
+// creature-collecting games organize variety: not as fully independent
+// randomized traits, but as a smaller number of cohesive *families*, each
+// with a consistent texture/color/feature identity (a well-known series'
+// "gelatinous" enemies are reliably soft and jelly-like across many
+// different individual designs; its "crystalline"-adjacent enemies are
+// reliably faceted and hard-edged) even though exact body shape varies a
+// lot within a family. User preferred this over the previous fully-
+// independent-axis design, which could combine into thematically
+// incoherent results (an "icy" palette mood paired with "earthy" texture
+// cues, for example).
+//
+// Each family constrains which hue band, palette moods, surface
+// patterns, and features are eligible -- but not silhouette (see
+// composeSilhouette), matching the observation that body *shape* varies
+// freely within a family while texture/color/feature identity stays
+// consistent. Indices reference PALETTE_MOODS / SURFACE_PATTERNS /
+// DISTINCTIVE_FEATURES above. Names are generic, invented labels for this
+// project, not taken from or referencing any existing work.
+export const MONSTER_FAMILIES = [
+  { name: "gelatinous", theme: "soft and translucent, with a jelly-like, gooey texture", hueStart: 100, hueSpan: 70, paletteMoodIndices: [1, 4], surfacePatternIndices: [0, 3], featureIndices: [2, 8, 10] },
+  { name: "crystalline", theme: "faceted and glassy, with hard reflective edges", hueStart: 250, hueSpan: 60, paletteMoodIndices: [0, 4], surfacePatternIndices: [0, 2], featureIndices: [1, 5, 9] },
+  { name: "verdant", theme: "leafy and organic, textured like foliage", hueStart: 70, hueSpan: 60, paletteMoodIndices: [1, 3], surfacePatternIndices: [0, 1], featureIndices: [2, 7, 11] },
+  { name: "ember", theme: "warm and glowing, like something faintly molten", hueStart: 350, hueSpan: 90, paletteMoodIndices: [0, 3], surfacePatternIndices: [0, 2], featureIndices: [5, 6, 10] },
+  { name: "aquatic", theme: "smooth and flowing, faintly wet-looking", hueStart: 180, hueSpan: 50, paletteMoodIndices: [0, 4], surfacePatternIndices: [0, 3], featureIndices: [3, 4, 10] },
+  { name: "aerial", theme: "light and downy, soft-bodied", hueStart: 40, hueSpan: 50, paletteMoodIndices: [1, 0], surfacePatternIndices: [0, 1], featureIndices: [0, 4, 2] },
+  { name: "stony", theme: "rough and chunky, mineral-like", hueStart: 20, hueSpan: 40, paletteMoodIndices: [3, 2], surfacePatternIndices: [3, 2], featureIndices: [5, 6, 9] },
+  { name: "shadow", theme: "dark and hazy, faintly indistinct at the edges", hueStart: 240, hueSpan: 40, paletteMoodIndices: [2, 4], surfacePatternIndices: [0, 3], featureIndices: [10, 11, 3] },
+  { name: "sheen", theme: "cool with a mineral-like shine", hueStart: 195, hueSpan: 30, paletteMoodIndices: [4, 0], surfacePatternIndices: [0, 2], featureIndices: [1, 9, 5] },
+  { name: "downy", theme: "fuzzy and warm to the eye", hueStart: 15, hueSpan: 40, paletteMoodIndices: [3, 1], surfacePatternIndices: [0, 1], featureIndices: [0, 3, 2] },
+];
+
+// Total combinatorial space: 10 families x ~55 average hue span x 2
+// palette moods x 2 surface patterns x 3 features x 11,340 silhouettes
+// (see composeSilhouette, which stays fully independent of family) is on
+// the order of tens of millions -- comfortably past "10,000+
+// distinguishable results" (the user's bar, 2026-07-05) while every
+// combination a given family can produce stays thematically coherent,
+// unlike the fully-independent-axis version this replaced. This is
 // combinatorics, not true randomness -- a 32-bit hash has ~4.29 billion
-// possible values, still more than the ~980M combinations here, so there
-// is entropy to spare, but not by a huge margin; if more axes are added
-// later, check this comment's math still fits under 2^32 before assuming
-// it does.
+// possible values, comfortably more than needed here.
 export function styleFromSeed(seed) {
-  const hue = seed % 360;
-  let remainder = Math.floor(seed / 360);
+  let remainder = seed;
+  const family = MONSTER_FAMILIES[remainder % MONSTER_FAMILIES.length];
+  remainder = Math.floor(remainder / MONSTER_FAMILIES.length);
 
-  const { description: silhouette, remainder: afterSilhouette } = composeSilhouette(remainder);
-  remainder = afterSilhouette;
+  const hue = (family.hueStart + (remainder % family.hueSpan)) % 360;
+  remainder = Math.floor(remainder / family.hueSpan);
 
-  const featureIndex = remainder % DISTINCTIVE_FEATURES.length;
-  remainder = Math.floor(remainder / DISTINCTIVE_FEATURES.length);
-  const paletteMoodIndex = remainder % PALETTE_MOODS.length;
-  remainder = Math.floor(remainder / PALETTE_MOODS.length);
-  const surfacePatternIndex = remainder % SURFACE_PATTERNS.length;
+  const paletteMoodIndex = family.paletteMoodIndices[remainder % family.paletteMoodIndices.length];
+  remainder = Math.floor(remainder / family.paletteMoodIndices.length);
+  const surfacePatternIndex = family.surfacePatternIndices[remainder % family.surfacePatternIndices.length];
+  remainder = Math.floor(remainder / family.surfacePatternIndices.length);
+  const featureIndex = family.featureIndices[remainder % family.featureIndices.length];
+  remainder = Math.floor(remainder / family.featureIndices.length);
+
+  const { description: silhouette } = composeSilhouette(remainder);
 
   return {
+    familyName: family.name,
+    familyTheme: family.theme,
     hue,
     silhouette,
     feature: DISTINCTIVE_FEATURES[featureIndex],
@@ -231,7 +268,7 @@ export function buildInitialPrompt(digest) {
   // things" ask -- see styleFromSeed's comment for why. The seed comes
   // from the repo's permanent root commit, so this is the same for every
   // initial-design attempt on this repo but differs widely across repos.
-  const { hue, silhouette, feature, paletteMood, surfacePattern } = styleFromSeed(deriveIdentitySeed(digest.rootSha));
+  const { familyTheme, hue, silhouette, feature, paletteMood, surfacePattern } = styleFromSeed(deriveIdentitySeed(digest.rootSha));
   return `Design an original monster/creature (not humanoid, not based on any \
 existing franchise or trademarked design) that represents a software repository, in the \
 style of an old-school digital pet/creature-collecting game era, with separate equipment \
@@ -241,7 +278,9 @@ drawing the CONTENT of each slot, not a full document.
 ${PIXEL_ART_RULES}
 
 This specific creature's identity (derived from this repository, so it won't match other \
-repositories' creatures -- follow these concretely rather than choosing your own):
+repositories' creatures -- follow these concretely rather than choosing your own): it belongs \
+to a design family best described as ${familyTheme}. Every choice below should read as \
+consistent with that description, not just individually valid.
 - Base the color palette around hue ${hue}° on the color wheel.
 - The overall color mood should be ${paletteMood}.
 - The body's overall silhouette should be: ${silhouette}.
