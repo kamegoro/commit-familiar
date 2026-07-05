@@ -5,36 +5,78 @@
 import { ARMOR_MILESTONE_STEP, deriveIdentitySeed } from "./traits.mjs";
 import { digestToFacts } from "./digest.mjs";
 
-// Deliberately structurally different from each other (not just "round
-// but slightly bigger") so that picking one by arithmetic actually forces
-// a different silhouette, not a cosmetic variation on the same shape.
-// Generic descriptions only -- no specific creature/franchise named.
-//
-// Expanded 2026-07-05: hue alone gives fine-grained numeric variety
-// (360 values), but two nearby hues barely read as different to a human,
-// and with only 10 archetypes x 8 features, the number of *structurally*
-// distinguishable results was really just 80, not the "thousands, ideally
-// never repeats" bar the user set. Multiplying more independent axes
-// together, not widening any single one, is what actually gets there --
-// see styleFromSeed for the combinatorics.
-export const SILHOUETTE_ARCHETYPES = [
-  "round and squat, wider than tall",
-  "tall and narrow, taller than wide",
-  "a long horizontal body low to the ground",
-  "lumpy and asymmetric, with uneven bumps on one side",
-  "segmented, built from 2-3 stacked sections of clearly different widths",
-  "curving to one side like a coil or a crescent",
-  "wedge-shaped, wide at the bottom tapering to a point at the top",
-  "wedge-shaped, wide at the top tapering to a point at the bottom",
-  "star-like, with several points radiating from a central mass",
-  "blocky and angular, built from distinct rectangular chunks rather than a smooth curve",
-  "an hourglass shape, narrow in the middle and wide at both the top and bottom",
-  "a flat wide disc, much wider than it is tall",
-  "a compact core with small stubby limb-like bumps poking out on both sides",
-  "a single tall spire narrowing continuously from a wide base to a thin tip",
-  "two round lobes of clearly different sizes joined together",
-  "a zigzagging outline that steps in and out irregularly rather than a smooth silhouette",
+// The silhouette is composed from several independent axes rather than
+// picked from one flat list of hand-written descriptions -- a flat list
+// can't practically reach "10,000 distinguishable silhouettes" (that
+// would mean writing 10,000 unique sentences by hand), but multiplying a
+// handful of independent, genuinely-orthogonal *dimensions of shape*
+// together easily does: proportion x lean x taper x edge quality x
+// segmentation x appendage x weight distribution = 5 x 3 x 4 x 3 x 3 x 7
+// x 3 = 11,340 distinct silhouettes alone (see composeSilhouette), before
+// even multiplying in hue/feature/palette/pattern on top. Each list is
+// generic and no specific creature/franchise named.
+export const SILHOUETTE_PROPORTIONS = [
+  "wider than it is tall",
+  "taller than it is wide",
+  "roughly equal in width and height",
+  "extremely elongated in one direction",
+  "flat and wide, low to the ground",
 ];
+
+export const SILHOUETTE_LEANS = ["symmetric, left and right mirrored", "asymmetric, leaning to the left", "asymmetric, leaning to the right"];
+
+export const SILHOUETTE_TAPERS = [
+  "narrowing toward the top",
+  "narrowing toward the bottom",
+  "bulging outward in the middle",
+  "a uniform width from top to bottom",
+];
+
+export const SILHOUETTE_EDGE_QUALITIES = ["smooth and rounded", "blocky and angular", "jagged and irregular"];
+
+export const SILHOUETTE_SEGMENTATIONS = [
+  "a single unified mass with no visible seams",
+  "built from 2 distinct joined segments",
+  "built from 3 or more distinct joined segments",
+];
+
+export const SILHOUETTE_APPENDAGES = [
+  "no limbs, just the core body",
+  "small stubby legs",
+  "small stubby arms",
+  "a tail extending from the base",
+  "wing-like nubs on the back",
+  "small tentacle-like extensions",
+  "a single small central nub",
+];
+
+export const SILHOUETTE_WEIGHT_DISTRIBUTIONS = ["heavier and denser toward the top", "heavier and denser toward the bottom", "evenly weighted throughout"];
+
+// Splits `seed` across all 7 silhouette axes (mixed-radix, same technique
+// as styleFromSeed) and composes them into one description. Returns both
+// the composed sentence (for the prompt) and the next remainder (so the
+// caller can keep splitting further axes from the same seed without
+// re-deriving one from scratch).
+export function composeSilhouette(seed) {
+  let remainder = seed;
+  const take = (list) => {
+    const index = remainder % list.length;
+    remainder = Math.floor(remainder / list.length);
+    return list[index];
+  };
+  const proportion = take(SILHOUETTE_PROPORTIONS);
+  const lean = take(SILHOUETTE_LEANS);
+  const taper = take(SILHOUETTE_TAPERS);
+  const edgeQuality = take(SILHOUETTE_EDGE_QUALITIES);
+  const segmentation = take(SILHOUETTE_SEGMENTATIONS);
+  const appendage = take(SILHOUETTE_APPENDAGES);
+  const weightDistribution = take(SILHOUETTE_WEIGHT_DISTRIBUTIONS);
+
+  const description =
+    `${proportion}, ${lean}, ${taper}, with ${edgeQuality} edges, ${segmentation}, ` +
+    `featuring ${appendage}, ${weightDistribution}`;
+  return { description, remainder };
+}
 
 export const DISTINCTIVE_FEATURES = [
   "a pair of small pointed ears",
@@ -66,24 +108,23 @@ export const SURFACE_PATTERNS = [
   "a patchy, mottled two-tone texture like uneven coloring",
 ];
 
-// Derives several independent-feeling choices from one seed via a
-// mixed-radix split (like extracting successive digits from one number),
-// so the axes don't all just repeat the same modulo pattern against each
-// other. The seed comes from the repo's permanent root commit SHA (see
-// digest.mjs), so this is deterministic per repository -- same repo
-// always designs toward the same identity -- but varies widely *across*
-// different repositories: 360 hues x 16 archetypes x 12 features x 5
-// palette moods x 4 surface patterns = 13,824,000 combinations, comfortably
-// past "thousands of distinguishable results" and into "collisions
-// between two different repos are practically negligible" territory. This
-// is combinatorics, not true randomness -- a 32-bit hash has ~4.29
-// billion possible values, far more than 13.8M combinations, so there's
-// no risk of running out of entropy to split.
+// Total combinatorial space: 360 hues x 11,340 silhouettes (see
+// composeSilhouette) x 12 features x 5 palette moods x 4 surface patterns
+// = 979,776,000. Comfortably past "10,000+ distinguishable results" (the
+// user's bar, 2026-07-05) for the silhouette axis alone, and orders of
+// magnitude more once combined with the other axes. This is
+// combinatorics, not true randomness -- a 32-bit hash has ~4.29 billion
+// possible values, still more than the ~980M combinations here, so there
+// is entropy to spare, but not by a huge margin; if more axes are added
+// later, check this comment's math still fits under 2^32 before assuming
+// it does.
 export function styleFromSeed(seed) {
   const hue = seed % 360;
   let remainder = Math.floor(seed / 360);
-  const archetypeIndex = remainder % SILHOUETTE_ARCHETYPES.length;
-  remainder = Math.floor(remainder / SILHOUETTE_ARCHETYPES.length);
+
+  const { description: silhouette, remainder: afterSilhouette } = composeSilhouette(remainder);
+  remainder = afterSilhouette;
+
   const featureIndex = remainder % DISTINCTIVE_FEATURES.length;
   remainder = Math.floor(remainder / DISTINCTIVE_FEATURES.length);
   const paletteMoodIndex = remainder % PALETTE_MOODS.length;
@@ -92,7 +133,7 @@ export function styleFromSeed(seed) {
 
   return {
     hue,
-    archetype: SILHOUETTE_ARCHETYPES[archetypeIndex],
+    silhouette,
     feature: DISTINCTIVE_FEATURES[featureIndex],
     paletteMood: PALETTE_MOODS[paletteMoodIndex],
     surfacePattern: SURFACE_PATTERNS[surfacePatternIndex],
@@ -190,7 +231,7 @@ export function buildInitialPrompt(digest) {
   // things" ask -- see styleFromSeed's comment for why. The seed comes
   // from the repo's permanent root commit, so this is the same for every
   // initial-design attempt on this repo but differs widely across repos.
-  const { hue, archetype, feature, paletteMood, surfacePattern } = styleFromSeed(deriveIdentitySeed(digest.rootSha));
+  const { hue, silhouette, feature, paletteMood, surfacePattern } = styleFromSeed(deriveIdentitySeed(digest.rootSha));
   return `Design an original monster/creature (not humanoid, not based on any \
 existing franchise or trademarked design) that represents a software repository, in the \
 style of an old-school digital pet/creature-collecting game era, with separate equipment \
@@ -203,7 +244,7 @@ This specific creature's identity (derived from this repository, so it won't mat
 repositories' creatures -- follow these concretely rather than choosing your own):
 - Base the color palette around hue ${hue}° on the color wheel.
 - The overall color mood should be ${paletteMood}.
-- The body's overall silhouette should be ${archetype}.
+- The body's overall silhouette should be: ${silhouette}.
 - Give it ${feature} as its one distinctive feature.
 - Render the body surface with ${surfacePattern}.
 
