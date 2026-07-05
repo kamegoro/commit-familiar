@@ -42,8 +42,10 @@ The character is deliberately **not** one image Claude freely repaints every run
 - **A fixed rig** (`rig/template.svg`) — the group structure and the CSS animations that
   give the monster a handful of small, occasional idle movements (a brief bounce, a blink,
   a little tap) rather than constant motion. Hand-authored once, never touched by AI.
-- **Independent parts** (`.familiar-parts.json`) — body, eyes, mouth, and three equipment
-  slots (hat, armor, shoes), each stored separately.
+- **Independent parts** — body, eyes, mouth, and three equipment slots (hat, armor, shoes),
+  each stored separately (`.familiar-parts.json`). This and the other growth-state files
+  (`.familiar-traits.json`, `.familiar-state.json`) live in the GitHub Actions cache, not
+  your repository — the only file this action ever commits is `familiar.svg` itself.
 - **One part updated per run.** A deterministic rule in code — not an LLM judgment call —
   decides which single slot changes, based on what actually happened:
 

@@ -79,15 +79,21 @@ available or before the user wants to spend real API credit.
 
 ## Notes
 
-- This intentionally reuses production file paths (`familiar.svg`,
-  `.familiar-parts.json`, etc.), not throwaway `/tmp` copies, so what you
-  see is exactly what would end up in the repository/README. These are
-  tracked production files (not gitignored), so a dry run shows up as a
-  normal modification in `git status`; if the user wants to discard it,
-  `git checkout -- familiar.svg .familiar-parts.json .familiar-traits.json
-  .familiar-state.json README.md` cleanly reverts it. `.familiar-dryrun-
-  meta.json` is the one file this tool writes that IS gitignored -- it's
-  scratch state passed between the two scripts, not a production file.
+- This intentionally reuses the same real file paths a production run
+  uses (`familiar.svg`, `.familiar-parts.json`, etc.), not throwaway
+  `/tmp` copies, so what you see is exactly what a real run would produce.
+  Only `familiar.svg` and `README.md` are ever meant to be committed --
+  `.familiar-parts.json`, `.familiar-traits.json`, `.familiar-state.json`,
+  and `.familiar-dryrun-meta.json` are all gitignored (growth state lives
+  in the GitHub Actions cache in a real deployment, see
+  `examples/workflow.yml`, specifically so this doesn't clutter a repo
+  with auto-generated files beyond the one image that actually needs to
+  be there). `git status` will still show them as modified if the repo
+  used to track them before this design changed; if the user wants to
+  discard a dry run's effect entirely, `git checkout -- familiar.svg
+  README.md` reverts the two tracked files, and the gitignored JSON files
+  can simply be deleted (or left as local-only scratch state -- they
+  don't affect the repo either way).
 - Never fabricate what the real API/model would do beyond genuinely
   reasoning through the prompt -- the whole point is an honest check of
   whether the prompt design produces sensible output, not a rubber stamp.
