@@ -24,15 +24,20 @@ export async function callClaude({ apiKey, model, prompt, maxTokens, fetchImpl =
   return data.content.map((b) => b.text ?? "").join("");
 }
 
+// Raised 2026-07-06 alongside PIXEL_ART_RULES requiring a dense grid of
+// small 4x4 rects (40+ just for the body) instead of a handful of large
+// blocks: genuinely detailed pixel art needs meaningfully more SVG
+// markup, and the previous limits (2000 / 500) were sized for the old,
+// coarser output and would truncate a properly detailed response.
 export async function generateInitialParts({ apiKey, model, digest, fetchImpl }) {
   const prompt = buildInitialPrompt(digest);
-  const text = await callClaude({ apiKey, model, prompt, maxTokens: 2000, fetchImpl });
+  const text = await callClaude({ apiKey, model, prompt, maxTokens: 4000, fetchImpl });
   return extractJsonObject(text);
 }
 
 export async function updatePart({ apiKey, model, partKey, currentContent, traits, digest, fetchImpl }) {
   const prompt = buildUpdatePrompt(partKey, currentContent, traits, digest);
-  const text = await callClaude({ apiKey, model, prompt, maxTokens: 500, fetchImpl });
+  const text = await callClaude({ apiKey, model, prompt, maxTokens: 1200, fetchImpl });
   const obj = extractJsonObject(text);
   if (typeof obj[partKey] !== "string") throw new Error(`Response missing expected key "${partKey}".`);
   return obj[partKey];

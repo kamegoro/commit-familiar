@@ -226,10 +226,32 @@ export const PART_SPECS = {
 // concrete seed-derived instruction rather than a vague "please vary
 // things" ask -- see styleFromSeed and .agent/plan.md (2026-07-05,
 // "もっとランダム性がないとみんな同じものが作られる").
-export const PIXEL_ART_RULES = `Draw everything as pixel art: build shapes out of a grid of small \
-axis-aligned <rect> elements (each rect roughly 4-8 units square, no rounded corners, no \
-gradients, no anti-aliased curves), like a low-resolution retro handheld game display or a \
-simple digital pet toy.
+// Rect size and minimum count made explicit and concrete (2026-07-06)
+// after real generated output came out too chunky and low-detail: a
+// handful of 8-16 unit blocks reads as "blown up and coarse", not like
+// an actual retro sprite. Classic small RPG monster sprites are built
+// from a dense grid of individually-tiny pixels (often 32x32 to 64x64
+// pixels for the whole creature), not a dozen big rectangles -- a vague
+// "make it pixel art" instruction doesn't convey that density on its
+// own, so the grid size and a minimum rect count are stated as hard
+// numbers instead.
+export const PIXEL_ART_RULES = `Draw everything as pixel art on a fine, consistent grid: every \
+<rect> must be exactly 4 units square (width="4" height="4"), positioned on 4-unit boundaries \
+(x and y both multiples of 4), no rounded corners, no gradients, no anti-aliased curves -- like \
+a genuine retro sprite made of small individual pixels, not a handful of large blown-up blocks.
+
+Use enough individual 4x4 rects to actually fill the silhouette in visible detail: the body \
+alone should use at least 40 separate rects (not 8-12), covering its full area edge to edge \
+with no gaps -- a sparse outline of a few big rectangles is not acceptable, only a dense grid \
+of small ones is.
+
+Rect count alone is not the goal -- many small rects arranged as a few perfectly flat, \
+uniform-width rows still reads as coarse and blocky, just built from smaller pieces. To \
+actually look like a genuine retro sprite: (1) step the silhouette's outline in and out by \
+one pixel at a time between rows rather than keeping the same width for many rows in a row, \
+and (2) scatter a handful of individual pixels in a slightly different, lighter or darker \
+shade throughout each color band (not confined to a clean top/mid/bottom split) for a subtly \
+dithered, textured look, rather than perfectly flat uniform bands of color.
 
 For charm and appeal:
 - Eyes should be noticeably large relative to the body (this reads as "cute" far more than \
