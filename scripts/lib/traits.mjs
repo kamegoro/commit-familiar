@@ -5,6 +5,27 @@
 
 export const ARMOR_MILESTONE_STEP = 25;
 
+// FNV-1a: a small, well-distributed, non-cryptographic string hash. Used
+// to turn a repository's permanent root commit SHA into a stable numeric
+// "style seed" (see parts.mjs's styleFromSeed) so the initial design's
+// hue/silhouette-archetype/distinctive-feature are picked by arithmetic
+// on real per-repo data instead of left to the model's own aesthetic
+// judgment -- which, per direct user feedback (2026-07-05, "もっとラン
+// ダム性がないとみんな同じものが作られる" -- without more randomness
+// everyone ends up making the same thing), tends to converge on the same
+// "pleasant" choices across many different repos even when explicitly
+// asked for variety. Same technique used by shellmon (an earlier project
+// this session, deriving an image seed from freeform text) and
+// structurally similar to how DiceBear seeds its component selection.
+export function deriveIdentitySeed(text) {
+  let hash = 2166136261; // FNV-1a offset basis
+  for (let i = 0; i < text.length; i++) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0; // unsigned
+}
+
 export function topEntry(counts) {
   const entries = Object.entries(counts);
   if (!entries.length) return null;

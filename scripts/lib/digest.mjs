@@ -71,7 +71,13 @@ export function buildActivityDigest(sinceSha, cwd = process.cwd()) {
   // ordinal HEAD~N guess -- HEAD~N would silently misalign once merge
   // commits exist, since commitCount above excludes them but HEAD~N
   // walks every commit regardless.
-  const base = sinceSha ? sinceSha : run("git rev-list --max-parents=0 HEAD").split("\n")[0];
+  // Always computed (not just when sinceSha is null): this is the
+  // repository's permanent identity anchor, used to derive a stable
+  // per-repo "style seed" (see traits.mjs's deriveIdentitySeed) for the
+  // initial design -- it never changes for the life of the repo, unlike
+  // sinceSha which advances every run.
+  const rootSha = run("git rev-list --max-parents=0 HEAD").split("\n")[0];
+  const base = sinceSha || rootSha;
   const filesChangedMatch = run(`git diff --stat ${base}..HEAD`).match(/(\d+) files? changed/);
   const filesChanged = filesChangedMatch ? parseInt(filesChangedMatch[1], 10) : 0;
 
@@ -109,6 +115,7 @@ export function buildActivityDigest(sinceSha, cwd = process.cwd()) {
     // that can't happen would be untestable dead code, not safety.
     nightRatio: nightCommits / hours.length,
     distinctDays,
+    rootSha,
   };
 }
 

@@ -2,8 +2,52 @@
 // parsing. No I/O -- everything here is a plain function of its inputs,
 // so it's unit tested directly with no fixtures or network stubs.
 
-import { ARMOR_MILESTONE_STEP } from "./traits.mjs";
+import { ARMOR_MILESTONE_STEP, deriveIdentitySeed } from "./traits.mjs";
 import { digestToFacts } from "./digest.mjs";
+
+// Deliberately structurally different from each other (not just "round
+// but slightly bigger") so that picking one by arithmetic actually forces
+// a different silhouette, not a cosmetic variation on the same shape.
+// Generic descriptions only -- no specific creature/franchise named.
+export const SILHOUETTE_ARCHETYPES = [
+  "round and squat, wider than tall",
+  "tall and narrow, taller than wide",
+  "a long horizontal body low to the ground",
+  "lumpy and asymmetric, with uneven bumps on one side",
+  "segmented, built from 2-3 stacked sections of clearly different widths",
+  "curving to one side like a coil or a crescent",
+  "wedge-shaped, wide at the bottom tapering to a point at the top",
+  "wedge-shaped, wide at the top tapering to a point at the bottom",
+  "star-like, with several points radiating from a central mass",
+  "blocky and angular, built from distinct rectangular chunks rather than a smooth curve",
+];
+
+export const DISTINCTIVE_FEATURES = [
+  "a pair of small pointed ears",
+  "a single central horn",
+  "a small tuft or antenna on top",
+  "a short tail hinted at the base",
+  "small wing-like nubs on the back",
+  "a row of small spikes along the top edge",
+  "one asymmetric bump or growth larger than the rest",
+  "a small pattern of spots or a stripe across the body",
+];
+
+// Derives several independent-feeling choices from one seed via a
+// mixed-radix split (like extracting separate digits from one number),
+// so hue/archetype/feature don't all just repeat the same modulo pattern
+// against each other. The seed itself comes from the repo's permanent
+// root commit SHA (see digest.mjs), so this is deterministic per
+// repository -- same repo always designs toward the same identity -- but
+// varies widely *across* different repositories, which is the actual
+// goal: not randomness for its own sake, but enough independent axes
+// that different repos don't converge on the same "safe" result.
+export function styleFromSeed(seed) {
+  const hue = seed % 360;
+  const archetypeIndex = Math.floor(seed / 360) % SILHOUETTE_ARCHETYPES.length;
+  const featureIndex = Math.floor(seed / (360 * SILHOUETTE_ARCHETYPES.length)) % DISTINCTIVE_FEATURES.length;
+  return { hue, archetype: SILHOUETTE_ARCHETYPES[archetypeIndex], feature: DISTINCTIVE_FEATURES[featureIndex] };
+}
 
 // Each slot's purpose + a bounding-box hint, given to Claude so free-form
 // SVG fragments stay roughly in place inside the fixed rig's viewBox.
@@ -48,12 +92,12 @@ export const PART_SPECS = {
 // Expanded 2026-07-05 after repeated dry runs converged on the same
 // bland "layered rectangle pyramid" silhouette every time (a symmetric
 // stack of same-width bands, flat single color per band, small dot
-// eyes) -- that shape isn't wrong, it's just the one safe default a
-// model reaches for without more specific pressure toward variety and
-// charm. These rules push concretely for the two things that were
-// actually missing: appeal (bigger eyes, shading, a distinctive
-// silhouette feature) and variety (an explicit instruction not to
-// repeat the same body shape every time).
+// eyes). Craft/charm guidance lives here since it applies to every part
+// on every run; the *structural* variety fix (silhouette archetype,
+// distinctive feature, hue) lives in buildInitialPrompt instead, as a
+// concrete seed-derived instruction rather than a vague "please vary
+// things" ask -- see styleFromSeed and .agent/plan.md (2026-07-05,
+// "もっとランダム性がないとみんな同じものが作られる").
 export const PIXEL_ART_RULES = `Draw everything as pixel art: build shapes out of a grid of small \
 axis-aligned <rect> elements (each rect roughly 4-8 units square, no rounded corners, no \
 gradients, no anti-aliased curves), like a low-resolution retro handheld game display or a \
@@ -65,16 +109,7 @@ a small dot does) -- and shaded, not flat: a dark base color plus a small lighte
 rect for a glint.
 - Shade the body with at least 3 tones of the same hue (a light tone where the "light" hits, \
 a mid tone for most of the form, a dark tone for the underside/shadow), not one flat block of \
-color per band -- this is what separates a lively sprite from a flat silhouette.
-- Give the body ONE distinctive silhouette feature beyond a plain rounded/oval outline -- a \
-small notch of ears, a horn-like point, a tuft, an asymmetric bump, a tail hinted at the base \
--- something that would let someone recognize this specific creature at a glance.
-
-For variety: do not default to a symmetric stack of same-width horizontal bands narrowing \
-top and bottom (a plain pyramid/lozenge outline) -- that is the single most common shape a \
-model reaches for and produces a generic result. Actively vary the overall body silhouette \
-and color hue between different creatures/redesigns rather than converging on one "safe" \
-default shape every time.`;
+color per band -- this is what separates a lively sprite from a flat silhouette.`;
 
 export function extractJsonObject(text) {
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);
@@ -101,6 +136,11 @@ export function buildInitialPrompt(digest) {
   const specLines = Object.entries(PART_SPECS)
     .map(([key, spec]) => `- "${key}": ${spec.purpose}. Keep it within ${spec.bbox}.`)
     .join("\n");
+  // Concrete, seed-derived instructions instead of a vague "please vary
+  // things" ask -- see styleFromSeed's comment for why. The seed comes
+  // from the repo's permanent root commit, so this is the same for every
+  // initial-design attempt on this repo but differs widely across repos.
+  const { hue, archetype, feature } = styleFromSeed(deriveIdentitySeed(digest.rootSha));
   return `Design an original monster/creature (not humanoid, not based on any \
 existing franchise or trademarked design) that represents a software repository, in the \
 style of an old-school digital pet/creature-collecting game era, with separate equipment \
@@ -108,6 +148,11 @@ slots. It will be assembled from independent SVG part slots inside a fixed templ
 drawing the CONTENT of each slot, not a full document.
 
 ${PIXEL_ART_RULES}
+
+This specific creature's identity (derived from this repository, so it won't match other \
+repositories' creatures -- follow these concretely rather than choosing your own): base the \
+color palette around hue ${hue}° on the color wheel; the body's overall silhouette should be \
+${archetype}; give it ${feature} as its one distinctive feature.
 
 Slots to design:
 ${specLines}
