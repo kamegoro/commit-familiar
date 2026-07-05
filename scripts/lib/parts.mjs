@@ -108,6 +108,23 @@ export const SURFACE_PATTERNS = [
   "a patchy, mottled two-tone texture like uneven coloring",
 ];
 
+// Added 2026-07-06: eyes had no seed-derived variety at all (unlike
+// silhouette/feature/palette/pattern), so every generation defaulted to
+// the same "two round shaded eyes" shape regardless of repository --
+// user feedback: "目のパーツが同じすぎる" (the eye parts are too similar).
+export const EYE_STYLES = [
+  "large round symmetric eyes, evenly spaced",
+  "narrow, slightly slanted eyes",
+  "one eye noticeably larger than the other",
+  "eyes set close together near the center",
+  "eyes set wide apart near the outer edges",
+  "eyes with no visible pupils, just a solid glowing color",
+  "half-lidded, sleepy-looking eyes",
+  "wide, alert, slightly upturned eyes",
+  "a single centered eye instead of a pair",
+  "small round eyes stacked vertically instead of side by side",
+];
+
 // Researched (2026-07-05, at user request) how established
 // creature-collecting games organize variety: not as fully independent
 // randomized traits, but as a smaller number of cohesive *families*, each
@@ -128,16 +145,16 @@ export const SURFACE_PATTERNS = [
 // DISTINCTIVE_FEATURES above. Names are generic, invented labels for this
 // project, not taken from or referencing any existing work.
 export const MONSTER_FAMILIES = [
-  { name: "gelatinous", theme: "soft and translucent, with a jelly-like, gooey texture", hueStart: 100, hueSpan: 70, paletteMoodIndices: [1, 4], surfacePatternIndices: [0, 3], featureIndices: [2, 8, 10] },
-  { name: "crystalline", theme: "faceted and glassy, with hard reflective edges", hueStart: 250, hueSpan: 60, paletteMoodIndices: [0, 4], surfacePatternIndices: [0, 2], featureIndices: [1, 5, 9] },
-  { name: "verdant", theme: "leafy and organic, textured like foliage", hueStart: 70, hueSpan: 60, paletteMoodIndices: [1, 3], surfacePatternIndices: [0, 1], featureIndices: [2, 7, 11] },
-  { name: "ember", theme: "warm and glowing, like something faintly molten", hueStart: 350, hueSpan: 90, paletteMoodIndices: [0, 3], surfacePatternIndices: [0, 2], featureIndices: [5, 6, 10] },
-  { name: "aquatic", theme: "smooth and flowing, faintly wet-looking", hueStart: 180, hueSpan: 50, paletteMoodIndices: [0, 4], surfacePatternIndices: [0, 3], featureIndices: [3, 4, 10] },
-  { name: "aerial", theme: "light and downy, soft-bodied", hueStart: 40, hueSpan: 50, paletteMoodIndices: [1, 0], surfacePatternIndices: [0, 1], featureIndices: [0, 4, 2] },
-  { name: "stony", theme: "rough and chunky, mineral-like", hueStart: 20, hueSpan: 40, paletteMoodIndices: [3, 2], surfacePatternIndices: [3, 2], featureIndices: [5, 6, 9] },
-  { name: "shadow", theme: "dark and hazy, faintly indistinct at the edges", hueStart: 240, hueSpan: 40, paletteMoodIndices: [2, 4], surfacePatternIndices: [0, 3], featureIndices: [10, 11, 3] },
-  { name: "sheen", theme: "cool with a mineral-like shine", hueStart: 195, hueSpan: 30, paletteMoodIndices: [4, 0], surfacePatternIndices: [0, 2], featureIndices: [1, 9, 5] },
-  { name: "downy", theme: "fuzzy and warm to the eye", hueStart: 15, hueSpan: 40, paletteMoodIndices: [3, 1], surfacePatternIndices: [0, 1], featureIndices: [0, 3, 2] },
+  { name: "gelatinous", theme: "soft and translucent, with a jelly-like, gooey texture", hueStart: 100, hueSpan: 70, paletteMoodIndices: [1, 4], surfacePatternIndices: [0, 3], featureIndices: [2, 8, 10], eyeStyleIndices: [0, 5, 8] },
+  { name: "crystalline", theme: "faceted and glassy, with hard reflective edges", hueStart: 250, hueSpan: 60, paletteMoodIndices: [0, 4], surfacePatternIndices: [0, 2], featureIndices: [1, 5, 9], eyeStyleIndices: [1, 5, 2] },
+  { name: "verdant", theme: "leafy and organic, textured like foliage", hueStart: 70, hueSpan: 60, paletteMoodIndices: [1, 3], surfacePatternIndices: [0, 1], featureIndices: [2, 7, 11], eyeStyleIndices: [0, 6, 3] },
+  { name: "ember", theme: "warm and glowing, like something faintly molten", hueStart: 350, hueSpan: 90, paletteMoodIndices: [0, 3], surfacePatternIndices: [0, 2], featureIndices: [5, 6, 10], eyeStyleIndices: [5, 7, 2] },
+  { name: "aquatic", theme: "smooth and flowing, faintly wet-looking", hueStart: 180, hueSpan: 50, paletteMoodIndices: [0, 4], surfacePatternIndices: [0, 3], featureIndices: [3, 4, 10], eyeStyleIndices: [0, 4, 6] },
+  { name: "aerial", theme: "light and downy, soft-bodied", hueStart: 40, hueSpan: 50, paletteMoodIndices: [1, 0], surfacePatternIndices: [0, 1], featureIndices: [0, 4, 2], eyeStyleIndices: [0, 7, 3] },
+  { name: "stony", theme: "rough and chunky, mineral-like", hueStart: 20, hueSpan: 40, paletteMoodIndices: [3, 2], surfacePatternIndices: [3, 2], featureIndices: [5, 6, 9], eyeStyleIndices: [1, 4, 2] },
+  { name: "shadow", theme: "dark and hazy, faintly indistinct at the edges", hueStart: 240, hueSpan: 40, paletteMoodIndices: [2, 4], surfacePatternIndices: [0, 3], featureIndices: [10, 11, 3], eyeStyleIndices: [5, 8, 6] },
+  { name: "sheen", theme: "cool with a mineral-like shine", hueStart: 195, hueSpan: 30, paletteMoodIndices: [4, 0], surfacePatternIndices: [0, 2], featureIndices: [1, 9, 5], eyeStyleIndices: [1, 5, 9] },
+  { name: "downy", theme: "fuzzy and warm to the eye", hueStart: 15, hueSpan: 40, paletteMoodIndices: [3, 1], surfacePatternIndices: [0, 1], featureIndices: [0, 3, 2], eyeStyleIndices: [0, 6, 3] },
 ];
 
 // Total combinatorial space: 10 families x ~55 average hue span x 2
@@ -163,6 +180,8 @@ export function styleFromSeed(seed) {
   remainder = Math.floor(remainder / family.surfacePatternIndices.length);
   const featureIndex = family.featureIndices[remainder % family.featureIndices.length];
   remainder = Math.floor(remainder / family.featureIndices.length);
+  const eyeStyleIndex = family.eyeStyleIndices[remainder % family.eyeStyleIndices.length];
+  remainder = Math.floor(remainder / family.eyeStyleIndices.length);
 
   const { description: silhouette } = composeSilhouette(remainder);
 
@@ -174,6 +193,7 @@ export function styleFromSeed(seed) {
     feature: DISTINCTIVE_FEATURES[featureIndex],
     paletteMood: PALETTE_MOODS[paletteMoodIndex],
     surfacePattern: SURFACE_PATTERNS[surfacePatternIndex],
+    eyeStyle: EYE_STYLES[eyeStyleIndex],
   };
 }
 
@@ -290,7 +310,7 @@ export function buildInitialPrompt(digest) {
   // things" ask -- see styleFromSeed's comment for why. The seed comes
   // from the repo's permanent root commit, so this is the same for every
   // initial-design attempt on this repo but differs widely across repos.
-  const { familyTheme, hue, silhouette, feature, paletteMood, surfacePattern } = styleFromSeed(deriveIdentitySeed(digest.rootSha));
+  const { familyTheme, hue, silhouette, feature, paletteMood, surfacePattern, eyeStyle } = styleFromSeed(deriveIdentitySeed(digest.rootSha));
   return `Design an original monster/creature (not humanoid, not based on any \
 existing franchise or trademarked design) that represents a software repository, in the \
 style of an old-school digital pet/creature-collecting game era, with separate equipment \
@@ -308,6 +328,7 @@ consistent with that description, not just individually valid.
 - The body's overall silhouette should be: ${silhouette}.
 - Give it ${feature} as its one distinctive feature.
 - Render the body surface with ${surfacePattern}.
+- The eyes should be: ${eyeStyle}.
 
 Slots to design:
 ${specLines}
