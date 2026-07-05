@@ -14,7 +14,7 @@ import { execSync } from "node:child_process";
 // extensions touched (path metadata only, never diff content) and
 // keywords mentioned in commit message text. See .agent/plan.md for why
 // both are combined rather than picking one.
-export const KEYWORD_KINDS = [
+const KEYWORD_KINDS = [
   "rust", "python", "javascript", "typescript", "go", "golang", "ruby", "java", "kotlin",
   "swift", "lua", "c++", "csharp", "php", "docker", "kubernetes", "react", "vue", "svelte",
   "graphql", "sql", "terraform", "css", "html", "shell", "bash",

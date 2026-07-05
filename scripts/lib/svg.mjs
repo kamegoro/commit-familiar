@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-export const DEFAULT_TEMPLATE_PATH = join(__dirname, "..", "..", "rig", "template.svg");
+const DEFAULT_TEMPLATE_PATH = join(__dirname, "..", "..", "rig", "template.svg");
 
 export const README_MARKER_START = "<!-- COMMIT-FAMILIAR:START -->";
 export const README_MARKER_END = "<!-- COMMIT-FAMILIAR:END -->";
