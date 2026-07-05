@@ -14,7 +14,7 @@ character, because no two repositories have the same history.
 [How it works](#-how-it-works) • [Setup](#-setup) • [Customization](#-customization) • [vs similar projects](#-vs-similar-projects)
 
 <!-- COMMIT-FAMILIAR:START -->
-<img src="./familiar.svg" width="100" alt="familiar" />
+<img src="./familiar.svg" width="140" alt="familiar" />
 <!-- COMMIT-FAMILIAR:END -->
 
 *This project's own README uses commit-familiar on itself — the monster above is grown from this repository's real commit history.*
@@ -98,7 +98,7 @@ action doesn't control that. What it does let you configure (as `with:` inputs, 
 | `readme-path` | `README.md` | Where to look for the embed markers. |
 | `svg-path` | `familiar.svg` | Where the rendered character is written. |
 | `model` | `claude-sonnet-5` | Model used for the one-time initial design. |
-| `display-width` | `100` | Display width in the README, in CSS pixels. The SVG's own internal pixel grid is always 200x200 regardless. |
+| `display-width` | `140` | Display width in the README, in CSS pixels. The SVG's own internal pixel grid is always 200x200 regardless. |
 
 ## 🆚 vs similar projects
 

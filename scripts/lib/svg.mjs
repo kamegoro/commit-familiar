@@ -34,7 +34,7 @@ export function renderSvg(parts, templatePath = DEFAULT_TEMPLATE_PATH) {
 // "デカすぎる" -- too big). An HTML <img width="..."> tag makes the
 // display size explicit and configurable instead of leaving it to
 // whatever a renderer's default happens to be.
-export const DEFAULT_DISPLAY_WIDTH = 100;
+export const DEFAULT_DISPLAY_WIDTH = 140;
 
 // Auto-embeds the character into a README between two marker comments, so
 // setup is "paste two marker lines once" rather than "remember to add an
