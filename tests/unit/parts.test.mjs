@@ -18,6 +18,7 @@ import {
   DISTINCTIVE_FEATURES,
   PALETTE_MOODS,
   SURFACE_PATTERNS,
+  MONSTER_FAMILIES,
 } from "../../scripts/lib/parts.mjs";
 
 const SILHOUETTE_SPACE =
@@ -73,7 +74,7 @@ describe("styleFromSeed", () => {
     }
   });
 
-  test("every non-silhouette axis is always one of its known descriptions", () => {
+  test("every axis is always one of the global known descriptions", () => {
     for (const seed of [0, 1, 12345, 4294967295]) {
       const { feature, paletteMood, surfacePattern } = styleFromSeed(seed);
       assert.ok(DISTINCTIVE_FEATURES.includes(feature));
@@ -82,15 +83,39 @@ describe("styleFromSeed", () => {
     }
   });
 
-  test("the silhouette field is a non-empty composed description", () => {
+  test("every axis stays within that specific family's own allowed subset, not just the global list", () => {
+    // The whole point of the family system is coherence: a "gelatinous"
+    // creature should never get a feature/mood/pattern that only some
+    // *other* family was designed to use.
+    for (let seed = 0; seed < MONSTER_FAMILIES.length * 50; seed++) {
+      const family = MONSTER_FAMILIES[seed % MONSTER_FAMILIES.length];
+      const { familyName, hue, feature, paletteMood, surfacePattern } = styleFromSeed(seed);
+      assert.equal(familyName, family.name);
+
+      const hueInBand = Array.from({ length: family.hueSpan }, (_, i) => (family.hueStart + i) % 360).includes(hue);
+      assert.ok(hueInBand, `hue ${hue} outside ${family.name}'s band [${family.hueStart}, +${family.hueSpan})`);
+
+      assert.ok(family.featureIndices.map((i) => DISTINCTIVE_FEATURES[i]).includes(feature));
+      assert.ok(family.paletteMoodIndices.map((i) => PALETTE_MOODS[i]).includes(paletteMood));
+      assert.ok(family.surfacePatternIndices.map((i) => SURFACE_PATTERNS[i]).includes(surfacePattern));
+    }
+  });
+
+  test("the silhouette field is a non-empty composed description, independent of family", () => {
     const { silhouette } = styleFromSeed(42);
     assert.ok(typeof silhouette === "string" && silhouette.length > 0);
   });
 
-  test("the total combinatorial space comfortably clears 10,000", () => {
-    const total = 360 * SILHOUETTE_SPACE * DISTINCTIVE_FEATURES.length * PALETTE_MOODS.length * SURFACE_PATTERNS.length;
-    assert.ok(total >= 10000, `combinatorial space is only ${total}`);
-    assert.ok(total < 2 ** 32, "combinatorial space exceeds a 32-bit hash's entropy");
+  test("even the smallest family's combinatorial space comfortably clears 10,000", () => {
+    for (const family of MONSTER_FAMILIES) {
+      const perFamily = family.hueSpan * family.paletteMoodIndices.length * family.surfacePatternIndices.length * family.featureIndices.length * SILHOUETTE_SPACE;
+      assert.ok(perFamily >= 10000, `${family.name}'s space is only ${perFamily}`);
+    }
+    const total = MONSTER_FAMILIES.reduce(
+      (sum, f) => sum + f.hueSpan * f.paletteMoodIndices.length * f.surfacePatternIndices.length * f.featureIndices.length * SILHOUETTE_SPACE,
+      0
+    );
+    assert.ok(total < 2 ** 32, "combined combinatorial space exceeds a 32-bit hash's entropy");
   });
 
   test("is deterministic for the same seed", () => {
