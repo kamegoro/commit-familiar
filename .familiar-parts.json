@@ -1,0 +1,8 @@
+{
+  "body-slot": "<rect x=\"94\" y=\"92\" width=\"8\" height=\"8\" fill=\"#eaf6ff\"/><rect x=\"90\" y=\"100\" width=\"16\" height=\"4\" fill=\"#cfe8ff\"/><rect x=\"76\" y=\"104\" width=\"32\" height=\"8\" fill=\"#cfe8ff\"/><rect x=\"76\" y=\"112\" width=\"32\" height=\"8\" fill=\"#a8d0f0\"/><rect x=\"76\" y=\"120\" width=\"32\" height=\"16\" fill=\"#7fb8e8\"/><rect x=\"76\" y=\"136\" width=\"32\" height=\"16\" fill=\"#5590c4\"/><rect x=\"76\" y=\"152\" width=\"32\" height=\"8\" fill=\"#3d6f9e\"/><rect x=\"68\" y=\"124\" width=\"8\" height=\"8\" fill=\"#a8d0f0\"/>",
+  "eyes-slot": "<rect x=\"82\" y=\"84\" width=\"12\" height=\"12\" fill=\"#16283a\"/><rect x=\"102\" y=\"84\" width=\"12\" height=\"12\" fill=\"#16283a\"/><rect x=\"85\" y=\"87\" width=\"4\" height=\"4\" fill=\"#eaf6ff\"/><rect x=\"105\" y=\"87\" width=\"4\" height=\"4\" fill=\"#eaf6ff\"/>",
+  "mouth-slot": "<rect x=\"92\" y=\"108\" width=\"16\" height=\"4\" fill=\"#16283a\"/>",
+  "hat-slot": "",
+  "armor-slot": "",
+  "shoes-slot": ""
+}
