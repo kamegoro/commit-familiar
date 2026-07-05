@@ -6,12 +6,64 @@ import {
   buildInitialPrompt,
   buildUpdatePrompt,
   styleFromSeed,
+  composeSilhouette,
   PART_SPECS,
-  SILHOUETTE_ARCHETYPES,
+  SILHOUETTE_PROPORTIONS,
+  SILHOUETTE_LEANS,
+  SILHOUETTE_TAPERS,
+  SILHOUETTE_EDGE_QUALITIES,
+  SILHOUETTE_SEGMENTATIONS,
+  SILHOUETTE_APPENDAGES,
+  SILHOUETTE_WEIGHT_DISTRIBUTIONS,
   DISTINCTIVE_FEATURES,
   PALETTE_MOODS,
   SURFACE_PATTERNS,
 } from "../../scripts/lib/parts.mjs";
+
+const SILHOUETTE_SPACE =
+  SILHOUETTE_PROPORTIONS.length *
+  SILHOUETTE_LEANS.length *
+  SILHOUETTE_TAPERS.length *
+  SILHOUETTE_EDGE_QUALITIES.length *
+  SILHOUETTE_SEGMENTATIONS.length *
+  SILHOUETTE_APPENDAGES.length *
+  SILHOUETTE_WEIGHT_DISTRIBUTIONS.length;
+
+describe("composeSilhouette", () => {
+  test("the silhouette axis alone reaches at least 10,000 distinguishable combinations (the bar the user set)", () => {
+    assert.ok(SILHOUETTE_SPACE >= 10000, `silhouette space is only ${SILHOUETTE_SPACE}`);
+  });
+
+  test("every sub-axis phrase appears in the composed description", () => {
+    const { description } = composeSilhouette(12345);
+    for (const list of [
+      SILHOUETTE_PROPORTIONS,
+      SILHOUETTE_LEANS,
+      SILHOUETTE_TAPERS,
+      SILHOUETTE_EDGE_QUALITIES,
+      SILHOUETTE_SEGMENTATIONS,
+      SILHOUETTE_APPENDAGES,
+      SILHOUETTE_WEIGHT_DISTRIBUTIONS,
+    ]) {
+      assert.ok(list.some((phrase) => description.includes(phrase)), `no phrase from [${list[0]}...] found in "${description}"`);
+    }
+  });
+
+  test("is deterministic for the same seed", () => {
+    assert.deepEqual(composeSilhouette(999), composeSilhouette(999));
+  });
+
+  test("two different seeds within the silhouette space produce different descriptions", () => {
+    const a = composeSilhouette(0);
+    const b = composeSilhouette(1);
+    assert.notEqual(a.description, b.description);
+  });
+
+  test("returns the leftover remainder so callers can keep splitting further axes", () => {
+    const { remainder } = composeSilhouette(SILHOUETTE_SPACE * 3 + 7);
+    assert.equal(remainder, 3);
+  });
+});
 
 describe("styleFromSeed", () => {
   test("hue is always within 0-359", () => {
@@ -21,19 +73,24 @@ describe("styleFromSeed", () => {
     }
   });
 
-  test("every axis is always one of its known descriptions", () => {
+  test("every non-silhouette axis is always one of its known descriptions", () => {
     for (const seed of [0, 1, 12345, 4294967295]) {
-      const { archetype, feature, paletteMood, surfacePattern } = styleFromSeed(seed);
-      assert.ok(SILHOUETTE_ARCHETYPES.includes(archetype));
+      const { feature, paletteMood, surfacePattern } = styleFromSeed(seed);
       assert.ok(DISTINCTIVE_FEATURES.includes(feature));
       assert.ok(PALETTE_MOODS.includes(paletteMood));
       assert.ok(SURFACE_PATTERNS.includes(surfacePattern));
     }
   });
 
-  test("the combinatorial space is at least 10,000 (the bar the user set)", () => {
-    const total = 360 * SILHOUETTE_ARCHETYPES.length * DISTINCTIVE_FEATURES.length * PALETTE_MOODS.length * SURFACE_PATTERNS.length;
+  test("the silhouette field is a non-empty composed description", () => {
+    const { silhouette } = styleFromSeed(42);
+    assert.ok(typeof silhouette === "string" && silhouette.length > 0);
+  });
+
+  test("the total combinatorial space comfortably clears 10,000", () => {
+    const total = 360 * SILHOUETTE_SPACE * DISTINCTIVE_FEATURES.length * PALETTE_MOODS.length * SURFACE_PATTERNS.length;
     assert.ok(total >= 10000, `combinatorial space is only ${total}`);
+    assert.ok(total < 2 ** 32, "combinatorial space exceeds a 32-bit hash's entropy");
   });
 
   test("is deterministic for the same seed", () => {
@@ -114,11 +171,11 @@ describe("buildInitialPrompt", () => {
     assert.match(prompt, /3 commits since last update/);
   });
 
-  test("embeds a concrete hue degree, silhouette archetype, feature, palette mood, and surface pattern", () => {
+  test("embeds a concrete hue degree, composed silhouette, feature, palette mood, and surface pattern", () => {
     const prompt = buildInitialPrompt(digest);
     assert.match(prompt, /hue \d+° on the color wheel/);
     const alt = (list) => new RegExp(list.map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"));
-    assert.match(prompt, alt(SILHOUETTE_ARCHETYPES));
+    assert.match(prompt, alt(SILHOUETTE_PROPORTIONS));
     assert.match(prompt, alt(DISTINCTIVE_FEATURES));
     assert.match(prompt, alt(PALETTE_MOODS));
     assert.match(prompt, alt(SURFACE_PATTERNS));
