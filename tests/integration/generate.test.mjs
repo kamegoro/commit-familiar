@@ -142,7 +142,7 @@ describe("run", () => {
 
     const result = await withCwd(dir, () => run(baseConfig(dir)));
     assert.equal(result.readmeResult, "updated");
-    assert.match(readFileSync(join(dir, "README.md"), "utf8"), /!\[familiar\]/);
+    assert.match(readFileSync(join(dir, "README.md"), "utf8"), /<img src="[^"]*familiar\.svg" width="\d+" alt="familiar" \/>/);
   });
 });
 
@@ -165,6 +165,7 @@ describe("loadConfig", () => {
       FAMILIAR_MIN_COMMITS: "7",
       FAMILIAR_UPDATE_MODEL: "u-model",
       FAMILIAR_INIT_MODEL: "i-model",
+      FAMILIAR_DISPLAY_WIDTH: "250",
     });
     assert.deepEqual(config, {
       apiKey: "k",
@@ -176,6 +177,7 @@ describe("loadConfig", () => {
       minCommits: 7,
       updateModel: "u-model",
       initModel: "i-model",
+      displayWidth: 250,
     });
   });
 });

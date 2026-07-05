@@ -18,6 +18,7 @@ import {
   DISTINCTIVE_FEATURES,
   PALETTE_MOODS,
   SURFACE_PATTERNS,
+  EYE_STYLES,
   MONSTER_FAMILIES,
 } from "../../scripts/lib/parts.mjs";
 
@@ -76,20 +77,21 @@ describe("styleFromSeed", () => {
 
   test("every axis is always one of the global known descriptions", () => {
     for (const seed of [0, 1, 12345, 4294967295]) {
-      const { feature, paletteMood, surfacePattern } = styleFromSeed(seed);
+      const { feature, paletteMood, surfacePattern, eyeStyle } = styleFromSeed(seed);
       assert.ok(DISTINCTIVE_FEATURES.includes(feature));
       assert.ok(PALETTE_MOODS.includes(paletteMood));
       assert.ok(SURFACE_PATTERNS.includes(surfacePattern));
+      assert.ok(EYE_STYLES.includes(eyeStyle));
     }
   });
 
   test("every axis stays within that specific family's own allowed subset, not just the global list", () => {
     // The whole point of the family system is coherence: a "gelatinous"
-    // creature should never get a feature/mood/pattern that only some
-    // *other* family was designed to use.
+    // creature should never get a feature/mood/pattern/eye style that
+    // only some *other* family was designed to use.
     for (let seed = 0; seed < MONSTER_FAMILIES.length * 50; seed++) {
       const family = MONSTER_FAMILIES[seed % MONSTER_FAMILIES.length];
-      const { familyName, hue, feature, paletteMood, surfacePattern } = styleFromSeed(seed);
+      const { familyName, hue, feature, paletteMood, surfacePattern, eyeStyle } = styleFromSeed(seed);
       assert.equal(familyName, family.name);
 
       const hueInBand = Array.from({ length: family.hueSpan }, (_, i) => (family.hueStart + i) % 360).includes(hue);
@@ -98,6 +100,7 @@ describe("styleFromSeed", () => {
       assert.ok(family.featureIndices.map((i) => DISTINCTIVE_FEATURES[i]).includes(feature));
       assert.ok(family.paletteMoodIndices.map((i) => PALETTE_MOODS[i]).includes(paletteMood));
       assert.ok(family.surfacePatternIndices.map((i) => SURFACE_PATTERNS[i]).includes(surfacePattern));
+      assert.ok(family.eyeStyleIndices.map((i) => EYE_STYLES[i]).includes(eyeStyle));
     }
   });
 
@@ -107,14 +110,13 @@ describe("styleFromSeed", () => {
   });
 
   test("even the smallest family's combinatorial space comfortably clears 10,000", () => {
+    const perFamilySpace = (f) =>
+      f.hueSpan * f.paletteMoodIndices.length * f.surfacePatternIndices.length * f.featureIndices.length * f.eyeStyleIndices.length * SILHOUETTE_SPACE;
     for (const family of MONSTER_FAMILIES) {
-      const perFamily = family.hueSpan * family.paletteMoodIndices.length * family.surfacePatternIndices.length * family.featureIndices.length * SILHOUETTE_SPACE;
+      const perFamily = perFamilySpace(family);
       assert.ok(perFamily >= 10000, `${family.name}'s space is only ${perFamily}`);
     }
-    const total = MONSTER_FAMILIES.reduce(
-      (sum, f) => sum + f.hueSpan * f.paletteMoodIndices.length * f.surfacePatternIndices.length * f.featureIndices.length * SILHOUETTE_SPACE,
-      0
-    );
+    const total = MONSTER_FAMILIES.reduce((sum, f) => sum + perFamilySpace(f), 0);
     assert.ok(total < 2 ** 32, "combined combinatorial space exceeds a 32-bit hash's entropy");
   });
 
@@ -211,7 +213,7 @@ describe("buildInitialPrompt", () => {
     assert.match(prompt, /3 commits since last update/);
   });
 
-  test("embeds a concrete hue degree, composed silhouette, feature, palette mood, and surface pattern", () => {
+  test("embeds a concrete hue degree, composed silhouette, feature, palette mood, surface pattern, and eye style", () => {
     const prompt = buildInitialPrompt(digest);
     assert.match(prompt, /hue \d+° on the color wheel/);
     const alt = (list) => new RegExp(list.map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"));
@@ -219,6 +221,7 @@ describe("buildInitialPrompt", () => {
     assert.match(prompt, alt(DISTINCTIVE_FEATURES));
     assert.match(prompt, alt(PALETTE_MOODS));
     assert.match(prompt, alt(SURFACE_PATTERNS));
+    assert.match(prompt, alt(EYE_STYLES));
   });
 
   test("two repositories with different root commits get visibly different style instructions", () => {

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtempSync, writeFileSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { renderSvg, injectIntoReadme, README_MARKER_START, README_MARKER_END } from "../../scripts/lib/svg.mjs";
+import { renderSvg, injectIntoReadme, README_MARKER_START, README_MARKER_END, DEFAULT_DISPLAY_WIDTH } from "../../scripts/lib/svg.mjs";
 
 describe("renderSvg", () => {
   let dir, templatePath;
@@ -82,15 +82,27 @@ describe("injectIntoReadme", () => {
     writeFileSync(readmePath, `# Title\n\n${README_MARKER_START}\n${README_MARKER_END}\n\n## Next section\n`);
     assert.equal(injectIntoReadme(readmePath, "familiar.svg"), "updated");
     const result = readFileSync(readmePath, "utf8");
-    assert.match(result, /!\[familiar\]\(\.\/familiar\.svg\)/);
+    assert.match(result, /<img src="\.\/familiar\.svg" width="\d+" alt="familiar" \/>/);
     assert.match(result, /## Next section/);
+  });
+
+  test("uses the given displayWidth in the img tag", () => {
+    writeFileSync(readmePath, `${README_MARKER_START}\n${README_MARKER_END}`);
+    injectIntoReadme(readmePath, "familiar.svg", 250);
+    assert.match(readFileSync(readmePath, "utf8"), /width="250"/);
+  });
+
+  test("falls back to DEFAULT_DISPLAY_WIDTH when no width is given", () => {
+    writeFileSync(readmePath, `${README_MARKER_START}\n${README_MARKER_END}`);
+    injectIntoReadme(readmePath, "familiar.svg");
+    assert.match(readFileSync(readmePath, "utf8"), new RegExp(`width="${DEFAULT_DISPLAY_WIDTH}"`));
   });
 
   test("is idempotent: running it twice does not duplicate the image line", () => {
     writeFileSync(readmePath, `${README_MARKER_START}\n${README_MARKER_END}`);
     injectIntoReadme(readmePath, "familiar.svg");
     injectIntoReadme(readmePath, "familiar.svg");
-    const occurrences = readFileSync(readmePath, "utf8").match(/!\[familiar\]/g);
+    const occurrences = readFileSync(readmePath, "utf8").match(/<img src="\.\/familiar\.svg"/g);
     assert.equal(occurrences.length, 1);
   });
 

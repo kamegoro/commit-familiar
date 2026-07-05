@@ -172,7 +172,7 @@ describe("applyDryRunResponse", () => {
 
     const { readmeResult } = applyDryRunResponse('{"body-slot": "<rect/>"}', meta, applyConfig(dir));
     assert.equal(readmeResult, "updated");
-    assert.match(readFileSync(join(dir, "README.md"), "utf8"), /!\[familiar\]/);
+    assert.match(readFileSync(join(dir, "README.md"), "utf8"), /<img src="[^"]*familiar\.svg" width="\d+" alt="familiar" \/>/);
   });
 });
 
