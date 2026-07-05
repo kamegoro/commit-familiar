@@ -62,6 +62,16 @@ describe("generateInitialParts", () => {
     const result = await generateInitialParts({ apiKey: "k", model: "m", digest, fetchImpl });
     assert.deepEqual(result, parts);
   });
+
+  test("requests enough tokens for a densely-detailed response (raised 2026-07-06)", async () => {
+    let capturedBody;
+    const fetchImpl = async (url, init) => {
+      capturedBody = JSON.parse(init.body);
+      return { ok: true, json: async () => ({ content: [{ text: '{"body-slot": ""}' }] }) };
+    };
+    await generateInitialParts({ apiKey: "k", model: "m", digest, fetchImpl });
+    assert.equal(capturedBody.max_tokens, 4000);
+  });
 });
 
 describe("updatePart", () => {
@@ -80,5 +90,15 @@ describe("updatePart", () => {
       () => updatePart({ apiKey: "k", model: "m", partKey: "hat-slot", currentContent: "", traits, digest, fetchImpl }),
       /Response missing expected key "hat-slot"/
     );
+  });
+
+  test("requests enough tokens for a densely-detailed response (raised 2026-07-06)", async () => {
+    let capturedBody;
+    const fetchImpl = async (url, init) => {
+      capturedBody = JSON.parse(init.body);
+      return { ok: true, json: async () => ({ content: [{ text: '{"hat-slot": ""}' }] }) };
+    };
+    await updatePart({ apiKey: "k", model: "m", partKey: "hat-slot", currentContent: "", traits, digest, fetchImpl });
+    assert.equal(capturedBody.max_tokens, 1200);
   });
 });

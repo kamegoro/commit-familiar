@@ -186,6 +186,21 @@ describe("buildInitialPrompt", () => {
     assert.match(prompt, /no <svg> wrapper, no id or class/);
   });
 
+  test("specifies a fixed small pixel grid and a minimum rect count (2026-07-06 fix for too-coarse output)", () => {
+    const prompt = buildInitialPrompt(digest);
+    assert.match(prompt, /exactly 4 units square/);
+    assert.match(prompt, /at least 40 separate rects/);
+  });
+
+  test("asks for a stepped silhouette and scattered per-pixel shading, not just many rects in flat bands", () => {
+    // A dense grid of small rects arranged as perfectly flat uniform-width
+    // rows still looked coarse in practice (verified 2026-07-06 by
+    // actually rendering one) -- these two instructions are what fixed it.
+    const prompt = buildInitialPrompt(digest);
+    assert.match(prompt, /step the silhouette's outline/);
+    assert.match(prompt, /scatter a handful of individual pixels/);
+  });
+
   test("does not name any specific game, console, or franchise", () => {
     const prompt = buildInitialPrompt(digest);
     assert.doesNotMatch(prompt, /pok[eé]mon|tamagotchi|game ?boy|nintendo/i);
