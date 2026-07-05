@@ -44,10 +44,37 @@ export const PART_SPECS = {
 // specific game, console, or franchise -- per direct user instruction
 // (2026-07-05): the visual direction should evoke that whole era without
 // referencing anything specific/trademarked enough to invite a claim.
+//
+// Expanded 2026-07-05 after repeated dry runs converged on the same
+// bland "layered rectangle pyramid" silhouette every time (a symmetric
+// stack of same-width bands, flat single color per band, small dot
+// eyes) -- that shape isn't wrong, it's just the one safe default a
+// model reaches for without more specific pressure toward variety and
+// charm. These rules push concretely for the two things that were
+// actually missing: appeal (bigger eyes, shading, a distinctive
+// silhouette feature) and variety (an explicit instruction not to
+// repeat the same body shape every time).
 export const PIXEL_ART_RULES = `Draw everything as pixel art: build shapes out of a grid of small \
 axis-aligned <rect> elements (each rect roughly 4-8 units square, no rounded corners, no \
 gradients, no anti-aliased curves), like a low-resolution retro handheld game display or a \
-simple digital pet toy. Flat, limited color palette per part (2-4 colors).`;
+simple digital pet toy.
+
+For charm and appeal:
+- Eyes should be noticeably large relative to the body (this reads as "cute" far more than \
+a small dot does) -- and shaded, not flat: a dark base color plus a small lighter highlight \
+rect for a glint.
+- Shade the body with at least 3 tones of the same hue (a light tone where the "light" hits, \
+a mid tone for most of the form, a dark tone for the underside/shadow), not one flat block of \
+color per band -- this is what separates a lively sprite from a flat silhouette.
+- Give the body ONE distinctive silhouette feature beyond a plain rounded/oval outline -- a \
+small notch of ears, a horn-like point, a tuft, an asymmetric bump, a tail hinted at the base \
+-- something that would let someone recognize this specific creature at a glance.
+
+For variety: do not default to a symmetric stack of same-width horizontal bands narrowing \
+top and bottom (a plain pyramid/lozenge outline) -- that is the single most common shape a \
+model reaches for and produces a generic result. Actively vary the overall body silhouette \
+and color hue between different creatures/redesigns rather than converging on one "safe" \
+default shape every time.`;
 
 export function extractJsonObject(text) {
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/);

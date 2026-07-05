@@ -42,6 +42,18 @@ available or before the user wants to spend real API credit.
    - For an update prompt: a SMALL, recognizable adjustment to the
      existing content, not a redesign -- or a new small design if the
      slot was empty.
+   - **Put real effort into charm and variety, not just a valid
+     shape.** The prompt itself (`PIXEL_ART_RULES`) now spells out
+     specific guidance for this -- big shaded eyes, 3+ tones per body
+     part, one distinctive silhouette feature -- because early dry runs
+     kept converging on the same bland "symmetric stack of rectangles
+     narrowing top and bottom, flat single-color bands, tiny dot eyes"
+     result every single time (2026-07-05 user feedback: "何度やり直し
+     ても変わらないし、可愛くなさすぎる" -- doesn't change no matter how
+     many times you redo it, and it's not cute enough). Follow that
+     guidance for real, and genuinely vary the silhouette/hue between
+     separate initial-design runs instead of reusing your last design's
+     shape out of habit.
 
 3. Write your response as a single JSON object matching the shape the
    prompt asked for (all 6 part keys for an initial design; exactly one
@@ -69,13 +81,13 @@ available or before the user wants to spend real API credit.
 
 - This intentionally reuses production file paths (`familiar.svg`,
   `.familiar-parts.json`, etc.), not throwaway `/tmp` copies, so what you
-  see is exactly what would end up in the repository/README. If the user
-  wants to discard a dry run's output, `git checkout -- familiar.svg
-  .familiar-parts.json .familiar-traits.json .familiar-state.json
-  README.md` reverts it (these are gitignored... no, actually the
-  opposite: they ARE tracked production files, so `git status` will show
-  them as modified after a dry run, and `git checkout --` cleanly
-  discards an unwanted dry run).
+  see is exactly what would end up in the repository/README. These are
+  tracked production files (not gitignored), so a dry run shows up as a
+  normal modification in `git status`; if the user wants to discard it,
+  `git checkout -- familiar.svg .familiar-parts.json .familiar-traits.json
+  .familiar-state.json README.md` cleanly reverts it. `.familiar-dryrun-
+  meta.json` is the one file this tool writes that IS gitignored -- it's
+  scratch state passed between the two scripts, not a production file.
 - Never fabricate what the real API/model would do beyond genuinely
   reasoning through the prompt -- the whole point is an honest check of
   whether the prompt design produces sensible output, not a rubber stamp.
